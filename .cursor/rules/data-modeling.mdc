@@ -1,0 +1,12 @@
+---
+globs: lib/**/*.ts,app/**/*.ts
+description: Data modeling normalization and schema conventions
+---
+
+### Data Modeling
+
+- **Normalization**: Ensure 1NF (atomic values, primary key), 2NF (full dependency on key), 3NF (no transitive dependencies).
+- **Identifiers**: Use stable surrogate keys where appropriate; keep natural keys unique via constraints.
+- **Naming**: snake_case for database fields; singular table names unless domain requires otherwise.
+- **Migrations**: Write reversible migrations; avoid destructive changes without backups.
+- **Validation**: Mirror DB constraints in Zod schemas for consistent validation at boundaries.

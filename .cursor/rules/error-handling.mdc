@@ -1,0 +1,13 @@
+---
+globs: **/*.ts,**/*.tsx
+description: Error handling, guard clauses, and user-friendly errors
+---
+
+### Error Handling & Validation
+
+- **Guard clauses first**: Validate inputs and preconditions at the top. Return early.
+- **Avoid deep nesting**: Use if-return pattern; keep happy path last.
+- **Custom errors**: Prefer domain-specific error factories for consistent messages.
+- **Server actions**: Model expected errors as return values; avoid try/catch for expected flows.
+- **Logging**: Log actionable details; never include secrets.
+- **Services**: Code under `services/` must throw user-friendly errors that callers can display.

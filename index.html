@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boarding Pass</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #ddd6f3 0%, #c5b3f0 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .boarding-pass-container {
+      width: 100%;
+      max-width: 850px;
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      display: flex;
+      position: relative;
+    }
+
+    .main-section {
+      flex: 1;
+      min-width: 65%;
+    }
+
+    .header {
+      background: linear-gradient(90deg, #5B6FE6 0%, #7B8CE8 100%);
+      color: white;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 36px;
+      font-weight: 300;
+      letter-spacing: 4px;
+    }
+
+    .airline-name {
+      font-size: 24px;
+      font-weight: 400;
+      opacity: 0.95;
+    }
+
+    .flight-info {
+      padding: 35px 40px;
+      background: #f8f7fd;
+    }
+
+    .route-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 35px;
+      position: relative;
+    }
+
+    .airport-info {
+      flex: 1;
+    }
+
+    .airport-info.from {
+      text-align: left;
+    }
+
+    .airport-info.to {
+      text-align: right;
+    }
+
+    .airport-code {
+      font-size: 52px;
+      font-weight: 700;
+      color: #5B6FE6;
+      margin-bottom: 5px;
+      letter-spacing: 2px;
+    }
+
+    .city-name {
+      font-size: 20px;
+      color: #8B8FA8;
+      font-weight: 400;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .datetime {
+      font-size: 18px;
+      color: #333;
+      line-height: 1.4;
+    }
+
+    .plane-icon {
+      position: absolute;
+      left: 50%;
+      top: 25%;
+      transform: translateX(-50%) translateY(-50%);
+      width: 180px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .plane-icon svg {
+      width: 80px;
+      height: 80px;
+      opacity: 0.3;
+    }
+
+    .arrow {
+      position: absolute;
+      left: 50%;
+      top: 45%;
+      transform: translateX(-50%) translateY(-50%);
+      width: 180px;
+      height: 2px;
+      background: #333;
+    }
+
+    .arrow::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 12px solid #333;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+    }
+
+    .passenger-details {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr 1.2fr 1fr 1fr;
+      gap: 30px;
+      padding-top: 25px;
+      border-top: 1px solid #ddd;
+    }
+
+    .detail-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .detail-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+      font-weight: 400;
+    }
+
+    .detail-value {
+      font-size: 22px;
+      color: #5B6FE6;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .tear-line {
+      position: absolute;
+      right: 35%;
+      top: 10%;
+      bottom: 10%;
+      width: 2px;
+      background-image: repeating-linear-gradient(to bottom,
+          transparent,
+          transparent 8px,
+          #ccc 8px,
+          #ccc 16px);
+    }
+
+    .stub-section {
+      width: 35%;
+      background: #f8f7fd;
+      padding: 20px 30px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .stub-header {
+      background: linear-gradient(90deg, #7B8CE8 0%, #8B9AEA 100%);
+      margin: -20px -30px 25px -30px;
+      padding: 20px 30px;
+      color: white;
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+
+    .stub-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .stub-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .stub-label {
+      font-size: 14px;
+      color: #666;
+      font-weight: 400;
+    }
+
+    .stub-value {
+      font-size: 20px;
+      color: #5B6FE6;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .stub-value.large {
+      font-size: 24px;
+    }
+
+    .barcode {
+      margin-top: auto;
+      padding-top: 25px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .barcode-bars {
+      display: flex;
+      align-items: flex-end;
+      height: 60px;
+      gap: 2px;
+    }
+
+    .bar {
+      background: #000;
+      width: 3px;
+    }
+
+    .bar.thin {
+      width: 2px;
+    }
+
+    .bar.thick {
+      width: 5px;
+    }
+
+    @media (max-width: 768px) {
+      .boarding-pass-container {
+        flex-direction: column;
+        max-width: 400px;
+      }
+
+      .main-section {
+        min-width: 100%;
+      }
+
+      .header h1 {
+        font-size: 24px;
+        letter-spacing: 2px;
+      }
+
+      .airline-name {
+        font-size: 16px;
+      }
+
+      .flight-info {
+        padding: 25px 20px;
+      }
+
+      .airport-code {
+        font-size: 36px;
+      }
+
+      .city-name {
+        font-size: 16px;
+      }
+
+      .datetime {
+        font-size: 14px;
+      }
+
+      .passenger-details {
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .detail-value {
+        font-size: 18px;
+      }
+
+      .tear-line {
+        display: none;
+      }
+
+      .stub-section {
+        width: 100%;
+        border-top: 2px dashed #ccc;
+      }
+
+      .plane-icon svg {
+        width: 60px;
+        height: 60px;
+      }
+
+      .arrow {
+        width: 140px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+
+      .header {
+        padding: 15px 20px;
+      }
+
+      .passenger-details {
+        gap: 15px;
+      }
+
+      .detail-label {
+        font-size: 12px;
+      }
+
+      .detail-value {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="boarding-pass-container">
+    <div class="main-section">
+      <div class="header">
+        <h1>BOARDING PASS</h1>
+        <div class="airline-name">Lorem Airlines</div>
+      </div>
+      <div class="flight-info">
+        <div class="route-container">
+          <div class="airport-info from">
+            <div class="detail-label">FROM:</div>
+            <div class="airport-code">JFK</div>
+            <div class="city-name">NEW YORK</div>
+            <div class="datetime">
+              Jan 25, 2025<br>
+              05:50 PM
+            </div>
+          </div>
+          <div class="plane-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2A1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"
+                fill="#a0a6d8" />
+            </svg>
+          </div>
+          <div class="arrow"></div>
+          <div class="airport-info to">
+            <div class="detail-label">TO:</div>
+            <div class="airport-code">CDG</div>
+            <div class="city-name">PARIS</div>
+            <div class="datetime">
+              Jan 26, 2025<br>
+              07:20 AM
+            </div>
+          </div>
+        </div>
+        <div class="passenger-details">
+          <div class="detail-group">
+            <div class="detail-label">Passenger</div>
+            <div class="detail-value">JANE DOE</div>
+          </div>
+          <div class="detail-group">
+            <div class="detail-label">Flight</div>
+            <div class="detail-value">FR 0123</div>
+          </div>
+          <div class="detail-group">
+            <div class="detail-label">Terminal</div>
+            <div class="detail-value">2B</div>
+          </div>
+          <div class="detail-group">
+            <div class="detail-label">Gate</div>
+            <div class="detail-value">A 14</div>
+          </div>
+          <div class="detail-group">
+            <div class="detail-label">Seat</div>
+            <div class="detail-value">12 F</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tear-line"></div>
+    <div class="stub-section">
+      <div class="stub-header">Lorem Airlines</div>
+      <div class="stub-info">
+        <div class="stub-row">
+          <div class="stub-label">Passenger</div>
+          <div class="stub-label">Class</div>
+        </div>
+        <div class="stub-row">
+          <div class="stub-value large">JANE DOE</div>
+          <div class="stub-value large">FIRST</div>
+        </div>
+        <div style="margin-top: 20px;">
+          <div class="stub-row">
+            <div class="stub-label">Date</div>
+            <div class="stub-value">JAN 25</div>
+          </div>
+        </div>
+        <div>
+          <div class="stub-row">
+            <div class="stub-label">Boarding</div>
+            <div class="stub-value">05:20 PM</div>
+          </div>
+        </div>
+        <div>
+          <div class="stub-row">
+            <div class="stub-label">Depart</div>
+            <div class="stub-value">05:50 PM</div>
+          </div>
+        </div>
+      </div>
+      <div class="barcode">
+        <div class="barcode-bars">
+          <div class="bar thick" style="height: 100%"></div>
+          <div class="bar thin" style="height: 80%"></div>
+          <div class="bar thin" style="height: 100%"></div>
+          <div class="bar thick" style="height: 90%"></div>
+          <div class="bar thin" style="height: 100%"></div>
+          <div class="bar thin" style="height: 70%"></div>
+          <div class="bar thick" style="height: 100%"></div>
+          <div class="bar thick" style="height: 85%"></div>
+          <div class="bar thin" style="height: 100%"></div>
+          <div class="bar thin" style="height: 75%"></div>
+          <div class="bar thick" style="height: 100%"></div>
+          <div class="bar thin" style="height: 90%"></div>
+          <div class="bar thin" style="height: 100%"></div>
+          <div class="bar thick" style="height: 80%"></div>
+          <div class="bar thin" style="height: 100%"></div>
+          <div class="bar thick" style="height: 95%"></div>
+          <div class="bar thin" style="height: 100%"></div>
+          <div class="bar thin" style="height: 85%"></div>
+          <div class="bar thick" style="height: 100%"></div>
+          <div class="bar thin" style="height: 70%"></div>
+          <div class="bar thick" style="height: 100%"></div>
+          <div class="bar thin" style="height: 90%"></div>
+          <div class="bar thin" style="height: 100%"></div>
+          <div class="bar thick" style="height: 85%"></div>
+          <div class="bar thin" style="height: 100%"></div>
+          <div class="bar thick" style="height: 75%"></div>
+          <div class="bar thin" style="height: 100%"></div>
+          <div class="bar thin" style="height: 95%"></div>
+          <div class="bar thick" style="height: 100%"></div>
+          <div class="bar thin" style="height: 80%"></div>
+          <div class="bar thick" style="height: 100%"></div>
+          <div class="bar thin" style="height: 90%"></div>
+          <div class="bar thin" style="height: 100%"></div>
+          <div class="bar thick" style="height: 85%"></div>
+          <div class="bar thin" style="height: 100%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

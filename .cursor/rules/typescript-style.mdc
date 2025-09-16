@@ -1,0 +1,25 @@
+---
+globs: *.ts,*.tsx
+description: TypeScript style and naming conventions
+---
+
+### TypeScript Style and Naming
+
+- **Language**: Use TypeScript everywhere. Prefer `interface` over `type`. Avoid `enum`; use object maps.
+- **Functions**: Use the `function` keyword for pure functions. Avoid arrow functions for top-level exports.
+- **Semicolons**: Omit semicolons; rely on ASI.
+- **Naming**:
+  - Descriptive, full words: no abbreviations.
+  - Variables are nouns (e.g., `userProfile`), booleans begin with auxiliaries (e.g., `isLoading`).
+  - Functions are verbs/verb-phrases (e.g., `buildTripItinerary`).
+- **RORO**: Receive an object, return an object for exported utilities.
+- **Control flow**: Use guard clauses and early returns to reduce nesting; avoid unnecessary `else`.
+- **Formatting**: Prefer multi-line over long one-liners; wrap long expressions.
+- **Types**: Explicitly annotate public APIs; avoid `any` and unsafe casts.
+
+### File structure (per module)
+
+- Exported component or main function first
+- Subcomponents/helpers next
+- Static content constants
+- Interfaces at the end

@@ -1,0 +1,15 @@
+---
+globs: app/**/*.tsx,components/**/*.tsx
+description: React/Next.js App Router, RSC usage, and performance
+---
+
+### React/Next.js Guidelines
+
+- **App Router**: Use Next.js 15 App Router. Prefer Server Components. Add `"use client"` only when required for Web APIs or interactivity.
+- **Data fetching**: Prefer server-side data fetching. Avoid client fetch for primary data.
+- **State**: Rely on routing and server actions for state changes when possible.
+- **Suspense**: Wrap client components with `Suspense` fallbacks.
+- **Dynamic loading**: Lazy-load non-critical components.
+- **Images**: Use optimized WebP/AVIF, include dimensions, enable lazy loading.
+- **UI Stack**: Use Shadcn UI, Radix primitives, Tailwind Aria. Keep components accessible.
+- **Web Vitals**: Prioritize LCP/CLS/FID with SSR-first rendering and minimal client JS.

@@ -1,0 +1,18 @@
+---
+alwaysApply: true
+---
+
+### Project Structure Guide
+
+- **Entrypoints**: The root layout is [`app/layout.tsx`](mdc:app/layout.tsx). The primary landing page is [`app/page.tsx`](mdc:app/page.tsx).
+- **Global styles**: [`app/globals.css`](mdc:app/globals.css)
+- **UI components**: Located in [`components/`](mdc:components/). Prefer server components; add `"use client"` only when strictly needed for Web APIs.
+- **Libraries**: Shared logic in [`lib/`](mdc:lib/). Keep domain-specific helpers under nested folders (e.g., [`lib/trip-builder/`](mdc:lib/trip-builder/)).
+- **Public assets**: Images, fonts, and data under [`public/`](mdc:public/). Prefer WebP/AVIF where possible.
+
+### Conventions
+
+- **Directories** use lowercase with dashes (e.g., `components/travel-search-section`).
+- **Exports**: Favor named exports for components and helpers.
+- **RORO**: Receive an Object, Return an Object for functions.
+- **Avoid classes**: Use functional, declarative programming.

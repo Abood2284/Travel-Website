@@ -1,0 +1,12 @@
+---
+globs: components/**/*,app/**/*
+description: Tailwind, Shadcn UI, Radix, and image optimization
+---
+
+### UI Stack & Accessibility
+
+- **Tailwind**: Prefer utility classes over CSS modules. Follow mobile-first responsive design.
+- **Shadcn UI**: Use headless components; compose with Tailwind. Prefer named exports.
+- **Radix**: Use Radix primitives for accessibility; forward refs; pass through `className` and `...props`.
+- **Aria**: Ensure roles, labels, and keyboard navigation are correct.
+- **Images**: Use Next Image where applicable; prefer `.webp`/`.avif`, include width/height, use `loading="lazy"` when not LCP.

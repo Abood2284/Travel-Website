@@ -1,0 +1,12 @@
+---
+globs: app/**/*.ts,app/**/*.tsx,lib/**/*.ts
+description: Server Actions with next-safe-action and Zod
+---
+
+### Server Actions
+
+- **Library**: Use `next-safe-action` for all server actions.
+- **Validation**: Define input schemas with Zod. Validate before executing.
+- **Types**: Import `ActionResponse` from `@/types/actions` and ensure actions return it.
+- **Errors**: Model expected errors as return values. Avoid try/catch for expected flows; use `useActionState` on the client.
+- **Consistency**: Centralize domain logic under `lib/services/` or `services/` and throw user-friendly errors for consumers like TanStack Query.

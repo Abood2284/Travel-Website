@@ -4,7 +4,8 @@ import { TravelSearchSection } from "@/components/travel-search-section/travel-s
 import { ContinentExplorer } from "@/components/continent-explorer/continent-explorer";
 
 import TripBuilderSection from "@/components/trip-builder/TripBuilderSection";
-import BoardingPass from "@/components/trip-builder/BoardingPass";
+import HowItWorks from "@/components/how-it-works/HowItWorks";
+
 
 export default function HomePage() {
   return (
@@ -14,32 +15,9 @@ export default function HomePage() {
         pxPerFrame={24}
         scrubAmount={1}
       />
-      {/* <NextSection /> */}
-
       <TripBuilderSection />
-
-      {/* <HowItWorksWave
-        steps={[
-          {
-            title: "Book the form",
-            note: "Share dates, people count, and basics.",
-          },
-          {
-            title: "We craft your plan",
-            note: "Itinerary + airline/room preferences.",
-          },
-          {
-            title: "Concierge call",
-            note: "Human reviews, tweaks, and confirms.",
-          },
-          {
-            title: "Pay invoice",
-            note: "Use your reference to complete payment.",
-          },
-        ]}
-        heightVh={72}
-        topOffsetVh={10}
-      /> */}
+      {/* Here’s the new section */}
+      <HowItWorks />
 
       <TravelSearchSection />
       <ContinentExplorer />

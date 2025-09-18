@@ -28,7 +28,8 @@ export const ORIGIN_CITIES = [
 export const NATIONALITIES = [
   "Indian",
   "NRI",
-  "Other South Asian",
+  "South Asian",
+  "American",
   "Other",
 ] as const;
 

@@ -24,7 +24,8 @@ const COLORS = {
   bg: "#EBEBEB",
   water: "#0B0B0B",
   land: "#161616",
-  landStroke: "#262626",
+  landStroke: "#3A3A3A", // country borders (lighter than sphereStroke)
+  sphereStroke: "#0A0A0A", // outer sphere/continent outline (darker)
   landGlow: "#EBEBEB",
   landGlowGold: "#F5C542",
   graticule: "#2E2E2E",
@@ -523,19 +524,12 @@ export default function GlobeOrthographic({
     [destinations, currentSelectedId]
   );
 
-  // Smooth zoom in/out when selecting on mobile
+  // Disable mobile zooming: keep zoom fixed at 1 for performance
   const [selectionZoomAnimated, setSelectionZoomAnimated] = useState<number>(1);
   const zoomAnimRef = useRef<ReturnType<typeof animate> | null>(null);
   useEffect(() => {
-    const isMobile =
-      typeof window !== "undefined" ? window.innerWidth < 640 : false;
-    const target = isMobile && selected ? 3.2 : 1; // crazy deep resting zoom on mobile
     zoomAnimRef.current?.stop?.();
-    zoomAnimRef.current = animate(selectionZoomAnimated, target, {
-      duration: 0.6,
-      ease: "easeInOut",
-      onUpdate: (v) => setSelectionZoomAnimated(v),
-    });
+    if (selectionZoomAnimated !== 1) setSelectionZoomAnimated(1);
     return () => zoomAnimRef.current?.stop?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.id]);
@@ -838,39 +832,12 @@ export default function GlobeOrthographic({
         onUpdate: (t) => {
           planeTRef.current = t;
           updatePlaneAtProgress(t);
-          if (isMobile && coords.length > 1) {
-            const idx = Math.min(
-              coords.length - 1,
-              Math.max(0, Math.round(t * (coords.length - 1)))
-            );
-            const [lon, lat] = coords[idx];
-            setRotation([normalizeDeg(-lon), normalizeDeg(-lat), 0]);
-            // Ease zoom from deep to normal during flight
-            const startZ = 4.0; // crazy deep initial zoom
-            const endZ = 3.2; // crazy deep resting zoom
-            const z = startZ + (endZ - startZ) * t;
-            setSelectionZoomAnimated(z);
-          }
         },
-        onComplete: () => {
-          if (isMobile) setSelectionZoomAnimated(3.2);
-        },
+        onComplete: () => {},
       });
     };
 
-    if (isMobile && !prefersReducedMotion) {
-      // For mobile: Always center back to source (user) before starting
-      rotateTo(userPos.lat, userPos.lon, 650);
-      // First selection: apply deep zoom-in. Subsequent selections: keep current zoom
-      if (!hasFlownRef.current) setSelectionZoomAnimated(1.8);
-      const id = window.setTimeout(() => {
-        // Begin plane and follow camera along the route
-        startPlaneAnimation();
-        // Mark that we've flown at least once to keep zoom on subsequent selections
-        hasFlownRef.current = true;
-      }, 660);
-      return () => window.clearTimeout(id);
-    }
+    // Mobile now follows desktop behavior (no deep zoom / no camera-follow)
 
     // Desktop/default: rotate to destination, then fly (no camera follow)
     rotateTo(dest.lat, dest.lon);
@@ -899,7 +866,7 @@ export default function GlobeOrthographic({
         // Compute zoom focal point in SVG coords so scale targets the subject
         const isMobileViewport =
           typeof window !== "undefined" ? window.innerWidth < 640 : false;
-        const zoom = isMobileViewport ? selectionZoomAnimated : 1;
+        const zoom = 1; // fixed zoom for both desktop and mobile
         let fx = VIEW_W / 2;
         let fy = VIEW_H / 2;
         if (isMobileViewport && zoom > 1) {
@@ -1002,20 +969,27 @@ export default function GlobeOrthographic({
           <path
             d={path({ type: "Sphere" } as unknown as GeoPermissibleObjects)!}
             fill={COLORS.water}
-            stroke={COLORS.landStroke}
+            stroke={COLORS.sphereStroke}
             strokeWidth={1}
           />
 
           {/* Graticule (latitude/longitude lines) */}
-          {!isLowEndDevice && (
-            <path
-              d={path(graticule as unknown as GeoPermissibleObjects)!}
-              fill="none"
-              stroke={COLORS.graticule}
-              strokeWidth={0.6}
-              opacity={0.35}
-            />
-          )}
+          {(() => {
+            const isMobileViewport =
+              typeof window !== "undefined" ? window.innerWidth < 640 : false;
+            if (!isMobileViewport && isLowEndDevice) return null;
+            const strokeW = isMobileViewport ? 0.7 : 0.6;
+            const opacity = isMobileViewport ? 0.6 : 0.35;
+            return (
+              <path
+                d={path(graticule as unknown as GeoPermissibleObjects)!}
+                fill="none"
+                stroke={COLORS.graticule}
+                strokeWidth={strokeW}
+                opacity={opacity}
+              />
+            );
+          })()}
 
           {/* Land with fixed feathered gold glow on borders (single combined path) */}
           {landCombinedPath && (
@@ -1172,32 +1146,138 @@ export default function GlobeOrthographic({
                   onClick={() => handleSelectionChange(d.id)}
                   tooltip={`${d.name}, ${d.country}`}
                 />
-                {isSel ? (
-                  <g
-                    transform={`translate(${Math.min(
-                      pos.x + 12,
-                      VIEW_W - 4
-                    )}, ${pos.y - 16})`}
-                  >
-                    <rect
-                      x={-2}
-                      y={-12}
-                      width={160}
-                      height={22}
-                      rx={8}
-                      ry={8}
-                      fill="rgba(12,16,28,0.65)"
-                      stroke="rgba(255,255,255,0.08)"
-                    />
-                    <text
-                      x={6}
-                      y={4}
-                      fontSize={12}
-                      fill="rgba(255,255,255,0.92)"
-                      dominantBaseline="middle"
-                    >{`${d.name}, ${d.country}`}</text>
-                  </g>
-                ) : null}
+                {isSel
+                  ? (() => {
+                      const isMobileViewport =
+                        typeof window !== "undefined"
+                          ? window.innerWidth < 640
+                          : false;
+                      if (isMobileViewport) {
+                        const city = String(d.name || "")
+                          .trim()
+                          .replace(/\s+/g, " ");
+                        const country = String(d.country || "")
+                          .trim()
+                          .replace(/\s+/g, " ");
+                        const est = (s: string) => Math.ceil(s.length * 6.6); // ~ width per char at 13px
+                        const pad = 4;
+                        const line1H = 13;
+                        const line2H = 12;
+                        const gap = 2;
+                        const boxW =
+                          Math.max(est(city), est(country)) + pad * 2;
+                        const boxH = pad + line1H + gap + line2H + pad;
+                        const px = Math.round(
+                          Math.min(pos.x + 12, VIEW_W - 4 - boxW)
+                        );
+                        const py = Math.round(pos.y - (boxH - 6));
+                        return (
+                          <g transform={`translate(${px}, ${py})`}>
+                            {/* shadow without filters */}
+                            <rect
+                              x={0}
+                              y={1}
+                              width={boxW}
+                              height={boxH}
+                              rx={10}
+                              ry={10}
+                              fill="rgba(0,0,0,0.25)"
+                            />
+                            <rect
+                              x={0}
+                              y={0}
+                              width={boxW}
+                              height={boxH}
+                              rx={10}
+                              ry={10}
+                              fill="rgba(10,16,28,0.90)"
+                              stroke="rgba(255,255,255,0.14)"
+                            />
+                            {/* two-line: city bold, country normal (always two lines) */}
+                            <text
+                              x={pad}
+                              y={pad}
+                              fontSize={13}
+                              fill="#FFFFFF"
+                              fontWeight={700}
+                              dominantBaseline="hanging"
+                            >
+                              {city}
+                            </text>
+                            <text
+                              x={pad}
+                              y={pad + line1H + gap}
+                              fontSize={12}
+                              fill="rgba(255,255,255,0.90)"
+                              dominantBaseline="hanging"
+                            >
+                              {country}
+                            </text>
+                          </g>
+                        );
+                      }
+                      // Desktop styling updated: dynamic, two lines, 4px padding
+                      const city = String(d.name || "")
+                        .trim()
+                        .replace(/\s+/g, " ");
+                      const country = String(d.country || "")
+                        .trim()
+                        .replace(/\s+/g, " ");
+                      const est = (s: string) => Math.ceil(s.length * 6.6);
+                      const pad = 4;
+                      const line1H = 13;
+                      const line2H = 12;
+                      const gap = 2;
+                      const boxW = Math.max(est(city), est(country)) + pad * 2;
+                      const boxH = pad + line1H + gap + line2H + pad;
+                      const dpx = Math.round(
+                        Math.min(pos.x + 12, VIEW_W - 4 - boxW)
+                      );
+                      const dpy = Math.round(pos.y - (boxH - 6));
+                      return (
+                        <g transform={`translate(${dpx}, ${dpy})`}>
+                          <rect
+                            x={0}
+                            y={1}
+                            width={boxW}
+                            height={boxH}
+                            rx={8}
+                            ry={8}
+                            fill="rgba(0,0,0,0.25)"
+                          />
+                          <rect
+                            x={0}
+                            y={0}
+                            width={boxW}
+                            height={boxH}
+                            rx={8}
+                            ry={8}
+                            fill="rgba(12,16,28,0.90)"
+                            stroke="rgba(255,255,255,0.12)"
+                          />
+                          <text
+                            x={pad}
+                            y={pad}
+                            fontSize={13}
+                            fill="#FFFFFF"
+                            fontWeight={700}
+                            dominantBaseline="hanging"
+                          >
+                            {city}
+                          </text>
+                          <text
+                            x={pad}
+                            y={pad + line1H + gap}
+                            fontSize={12}
+                            fill="rgba(255,255,255,0.90)"
+                            dominantBaseline="hanging"
+                          >
+                            {country}
+                          </text>
+                        </g>
+                      );
+                    })()
+                  : null}
               </g>
             );
           })}
@@ -1216,29 +1296,70 @@ export default function GlobeOrthographic({
               return null;
             const userP = pinPositions.get("user");
             if (!userP || !sourcePlaceLabel) return null;
-            const px = Math.min(userP.x + 12, VIEW_W - 4);
-            const py = userP.y - 16;
+            const [cityRaw, countryRaw] = String(sourcePlaceLabel || "")
+              .split(",")
+              .map((s) => s.trim());
+            const city = (cityRaw || sourcePlaceLabel || "")
+              .trim()
+              .replace(/\s+/g, " ");
+            const country = (countryRaw || "").trim().replace(/\s+/g, " ");
+            const est = (s: string) => Math.ceil(s.length * 6.6);
+            const pad = 4;
+            const line1H = 13;
+            const line2H = 12;
+            const gap = 2;
+            const boxW = Math.max(est(city), est(country)) + pad * 2;
+            const boxH = pad + line1H + gap + line2H + pad;
+            const px = Math.round(Math.min(userP.x + 12, VIEW_W - 4 - boxW));
+            const py = Math.round(userP.y - (boxH - 6));
             return (
               <g transform={`translate(${px}, ${py})`}>
+                {/* shadow without filters */}
                 <rect
-                  x={-2}
-                  y={-12}
-                  width={160}
-                  height={22}
-                  rx={8}
-                  ry={8}
-                  fill="rgba(12,16,28,0.65)"
-                  stroke="rgba(255,255,255,0.08)"
+                  x={0}
+                  y={1}
+                  width={boxW}
+                  height={boxH}
+                  rx={10}
+                  ry={10}
+                  fill="rgba(0,0,0,0.25)"
                 />
-                <text
-                  x={6}
-                  y={4}
-                  fontSize={12}
-                  fill="rgba(255,255,255,0.92)"
-                  dominantBaseline="middle"
-                >
-                  {sourcePlaceLabel}
-                </text>
+                <rect
+                  x={0}
+                  y={0}
+                  width={boxW}
+                  height={boxH}
+                  rx={10}
+                  ry={10}
+                  fill="rgba(10,16,28,0.90)"
+                  stroke="rgba(255,255,255,0.14)"
+                />
+                {/* split label on comma if present; always render two lines with trimmed content */}
+                {(() => {
+                  return (
+                    <g>
+                      <text
+                        x={pad}
+                        y={pad}
+                        fontSize={13}
+                        fill="#FFFFFF"
+                        fontWeight={700}
+                        dominantBaseline="hanging"
+                      >
+                        {city}
+                      </text>
+                      <text
+                        x={pad}
+                        y={pad + line1H + gap}
+                        fontSize={12}
+                        fill="rgba(255,255,255,0.90)"
+                        dominantBaseline="hanging"
+                      >
+                        {country}
+                      </text>
+                    </g>
+                  );
+                })()}
               </g>
             );
           })()}

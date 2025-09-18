@@ -147,3 +147,35 @@ html::-webkit-scrollbar {
     background: #ebebeb !important;
   }
 }
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes glowPulse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(-8px) scale(1.03);
+    opacity: 0.95;
+  }
+}
+
+@keyframes glowPulseReverse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(8px) scale(1.03);
+    opacity: 0.95;
+  }
+}

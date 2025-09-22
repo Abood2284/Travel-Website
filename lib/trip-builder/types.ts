@@ -13,6 +13,9 @@ export type TripSeed = Partial<{
   flightClass: string; // Economy, Business, First
   visaStatus: string; // Available, N/A
   passengerName: string;
+  phoneCountryCode: string;
+  phoneNumber: string;
+  email: string;
 }>;
 
 export type TripPayload = Required<{
@@ -30,4 +33,7 @@ export type TripPayload = Required<{
   flightClass: string;
   visaStatus: string;
   passengerName: string;
+  phoneCountryCode: string;
+  phoneNumber: string;
+  email: string;
 }> & { createdAt: string };

@@ -15,6 +15,9 @@ export default function GlobeOrthographicLoader({
   className,
   onPickDestination,
   onUserPositionChange,
+  planeSoundStartSec,
+  planeSoundDurationSec,
+  planeSoundVolume,
 }: {
   destinations: Destination[];
   heightVh?: number;
@@ -25,6 +28,9 @@ export default function GlobeOrthographicLoader({
     lon: number;
     label?: string;
   }) => void;
+  planeSoundStartSec?: number;
+  planeSoundDurationSec?: number;
+  planeSoundVolume?: number;
 }) {
   interface TopologyLike {
     objects: Record<string, unknown>;
@@ -143,10 +149,10 @@ export default function GlobeOrthographicLoader({
   }
 
   return (
-    <section className="py-8">
-      <div className="max-w-7xl mx-auto px-4">
+    <section className="py-8 mt-24">
+      <div className="max-w-7xl mx-auto px-4 mb-16">
         <div className="text-center mb-0 md:mb-6">
-          <h2 className="text-6xl font-bold mb-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
+          <h2 className="text-7xl font-black mb-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
             Choose Your Destination
           </h2>
           <p className="md:text-xl text-sm text-gray-600 max-w-2xl mx-auto leading-relaxed">
@@ -167,10 +173,13 @@ export default function GlobeOrthographicLoader({
         selectedId={selectedId}
         onSelectionChange={handleSelectionChange}
         planeSpeed={60} // ← slower (try 80–140)
+        planeSoundStartSec={planeSoundStartSec}
+        planeSoundDurationSec={planeSoundDurationSec}
+        planeSoundVolume={planeSoundVolume}
       />
 
       {/* Location Pills */}
-      <div className="max-w-7xl mx-auto px-4 mt-4">
+      <div className="max-w-7xl mx-auto px-4 my-8">
         <div
           className="flex flex-nowrap md:flex-wrap gap-2.5 justify-start md:justify-center overflow-x-auto md:overflow-visible -mx-4 px-4"
           aria-label="Destination pills list"

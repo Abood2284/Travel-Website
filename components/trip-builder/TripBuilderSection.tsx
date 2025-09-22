@@ -23,7 +23,7 @@ export default function TripBuilderSection() {
   };
 
   return (
-    <section>
+    <section id="trip-builder">
       <GlobeOrthographicLoader
         destinations={DESTINATIONS}
         // Bubble events up
@@ -31,7 +31,7 @@ export default function TripBuilderSection() {
         onUserPositionChange={handleUserPos}
       />
 
-      <div style={{ padding: 20 }}>
+      <div style={{ padding: 20 }} className="my-12">
         <TripBuilderReceipt
           seed={seed}
           originLabel={originLabel}

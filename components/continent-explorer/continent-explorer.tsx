@@ -352,7 +352,7 @@ export function ContinentExplorer() {
   }
 
   return (
-    <section className="bg-[#f5f5f5] text-[#0a0a0a]">
+    <section id="continent-explorer" className="bg-[#f5f5f5] text-[#0a0a0a]">
       {/* Tabs */}
       <div
         role="tablist"

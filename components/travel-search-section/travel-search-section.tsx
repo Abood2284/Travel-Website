@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export function TravelSearchSection() {
   return (
-    <section className="relative isolate min-h-[70svh] w-full">
+    <section id="travel-search" className="relative isolate min-h-[70svh] w-full">
       <Image
         src="/images/rock_cliff_background.avif"
         alt="Rock cliff background"

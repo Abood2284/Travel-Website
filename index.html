@@ -1,488 +1,280 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Boarding Pass</title>
+  <meta charset="utf-8" />
+  <title>Smart FAQ — Refined UI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root {
+      --bg: #EBEBEB;
+      --ink: #0b0b0b;
+      --radius: 20px;
     }
 
+    html,
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: linear-gradient(135deg, #ddd6f3 0%, #c5b3f0 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      background: var(--bg);
+      color: var(--ink);
     }
 
-    .boarding-pass-container {
-      width: 100%;
-      max-width: 850px;
-      background: white;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-      display: flex;
-      position: relative;
+    .elev {
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 16px 44px rgba(0, 0, 0, .14);
+      border-radius: var(--radius);
     }
 
-    .main-section {
-      flex: 1;
-      min-width: 65%;
+    .chev {
+      transition: transform .25s ease;
     }
 
-    .header {
-      background: linear-gradient(90deg, #5B6FE6 0%, #7B8CE8 100%);
-      color: white;
-      padding: 20px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .acc-body {
+      grid-template-rows: 0fr;
+      transition: grid-template-rows .28s cubic-bezier(.2, .8, .2, 1);
     }
 
-    .header h1 {
-      font-size: 36px;
-      font-weight: 300;
-      letter-spacing: 4px;
+    .acc-open .acc-body {
+      grid-template-rows: 1fr;
     }
 
-    .airline-name {
-      font-size: 24px;
-      font-weight: 400;
-      opacity: 0.95;
+    .acc-panel {
+      min-height: 0;
     }
 
-    .flight-info {
-      padding: 35px 40px;
-      background: #f8f7fd;
+    .kbd {
+      border: 1px solid rgba(0, 0, 0, .18);
+      border-radius: 6px;
+      padding: .1rem .35rem;
+      font-size: .85em;
     }
 
-    .route-container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 35px;
-      position: relative;
-    }
-
-    .airport-info {
-      flex: 1;
-    }
-
-    .airport-info.from {
-      text-align: left;
-    }
-
-    .airport-info.to {
-      text-align: right;
-    }
-
-    .airport-code {
-      font-size: 52px;
-      font-weight: 700;
-      color: #5B6FE6;
-      margin-bottom: 5px;
-      letter-spacing: 2px;
-    }
-
-    .city-name {
-      font-size: 20px;
-      color: #8B8FA8;
-      font-weight: 400;
-      letter-spacing: 1px;
-      margin-bottom: 12px;
-    }
-
-    .datetime {
-      font-size: 18px;
-      color: #333;
-      line-height: 1.4;
-    }
-
-    .plane-icon {
-      position: absolute;
-      left: 50%;
-      top: 25%;
-      transform: translateX(-50%) translateY(-50%);
-      width: 180px;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .plane-icon svg {
-      width: 80px;
-      height: 80px;
-      opacity: 0.3;
-    }
-
-    .arrow {
-      position: absolute;
-      left: 50%;
-      top: 45%;
-      transform: translateX(-50%) translateY(-50%);
-      width: 180px;
-      height: 2px;
-      background: #333;
-    }
-
-    .arrow::after {
-      content: '';
-      position: absolute;
-      right: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border-left: 12px solid #333;
-      border-top: 8px solid transparent;
-      border-bottom: 8px solid transparent;
-    }
-
-    .passenger-details {
-      display: grid;
-      grid-template-columns: 2fr 1.5fr 1.2fr 1fr 1fr;
-      gap: 30px;
-      padding-top: 25px;
-      border-top: 1px solid #ddd;
-    }
-
-    .detail-group {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .detail-label {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 5px;
-      font-weight: 400;
-    }
-
-    .detail-value {
-      font-size: 22px;
-      color: #5B6FE6;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-
-    .tear-line {
-      position: absolute;
-      right: 35%;
-      top: 10%;
-      bottom: 10%;
-      width: 2px;
-      background-image: repeating-linear-gradient(to bottom,
-          transparent,
-          transparent 8px,
-          #ccc 8px,
-          #ccc 16px);
-    }
-
-    .stub-section {
-      width: 35%;
-      background: #f8f7fd;
-      padding: 20px 30px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-
-    .stub-header {
-      background: linear-gradient(90deg, #7B8CE8 0%, #8B9AEA 100%);
-      margin: -20px -30px 25px -30px;
-      padding: 20px 30px;
-      color: white;
-      font-size: 22px;
-      font-weight: 400;
-      letter-spacing: 2px;
-      text-align: center;
-    }
-
-    .stub-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .stub-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-    }
-
-    .stub-label {
-      font-size: 14px;
-      color: #666;
-      font-weight: 400;
-    }
-
-    .stub-value {
-      font-size: 20px;
-      color: #5B6FE6;
-      font-weight: 600;
-      text-align: right;
-    }
-
-    .stub-value.large {
-      font-size: 24px;
-    }
-
-    .barcode {
-      margin-top: auto;
-      padding-top: 25px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .barcode-bars {
-      display: flex;
-      align-items: flex-end;
-      height: 60px;
-      gap: 2px;
-    }
-
-    .bar {
+    .hit mark {
       background: #000;
-      width: 3px;
+      color: #fff;
+      padding: 0 .2em;
+      border-radius: 4px;
     }
 
-    .bar.thin {
-      width: 2px;
+    .item {
+      border-left: 3px solid transparent;
     }
 
-    .bar.thick {
-      width: 5px;
+    .acc-open.item {
+      border-left-color: #0b0b0b;
+      background: white;
     }
 
-    @media (max-width: 768px) {
-      .boarding-pass-container {
-        flex-direction: column;
-        max-width: 400px;
-      }
-
-      .main-section {
-        min-width: 100%;
-      }
-
-      .header h1 {
-        font-size: 24px;
-        letter-spacing: 2px;
-      }
-
-      .airline-name {
-        font-size: 16px;
-      }
-
-      .flight-info {
-        padding: 25px 20px;
-      }
-
-      .airport-code {
-        font-size: 36px;
-      }
-
-      .city-name {
-        font-size: 16px;
-      }
-
-      .datetime {
-        font-size: 14px;
-      }
-
-      .passenger-details {
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-      }
-
-      .detail-value {
-        font-size: 18px;
-      }
-
-      .tear-line {
-        display: none;
-      }
-
-      .stub-section {
-        width: 100%;
-        border-top: 2px dashed #ccc;
-      }
-
-      .plane-icon svg {
-        width: 60px;
-        height: 60px;
-      }
-
-      .arrow {
-        width: 140px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      body {
-        padding: 10px;
-      }
-
-      .header {
-        padding: 15px 20px;
-      }
-
-      .passenger-details {
-        gap: 15px;
-      }
-
-      .detail-label {
-        font-size: 12px;
-      }
-
-      .detail-value {
-        font-size: 16px;
-      }
+    .eyebrow {
+      letter-spacing: .06em;
     }
   </style>
 </head>
 
-<body>
-  <div class="boarding-pass-container">
-    <div class="main-section">
-      <div class="header">
-        <h1>BOARDING PASS</h1>
-        <div class="airline-name">Lorem Airlines</div>
+<body class="antialiased selection:bg-black selection:text-white">
+
+  <main class="max-w-6xl mx-auto px-4 py-12">
+    <header class="mb-6">
+      <h1 class="text-3xl md:text-4xl font-semibold tracking-tight">Smart FAQ</h1>
+      <p class="text-zinc-600">Search, filter, deep link. Press <span class="kbd">/</span> to focus search.</p>
+    </header>
+
+    <section class="elev bg-white p-4 md:p-6">
+      <!-- Controls -->
+      <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+        <div class="relative flex-1">
+          <input id="faq-search" placeholder="Search questions…"
+            class="w-full h-11 pl-10 pr-3 rounded-md border border-black/10 focus:ring-2 focus:ring-black/20" />
+          <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor">
+            <circle cx="11" cy="11" r="7" stroke-width="1.8" />
+            <path d="M20 20l-3.2-3.2" stroke-width="1.8" />
+          </svg>
+        </div>
+        <div class="ml-auto flex items-center gap-2">
+          <button id="expand-all"
+            class="h-10 px-3 rounded-md border border-black/10 hover:bg-black hover:text-white transition">Expand
+            all</button>
+          <button id="collapse-all"
+            class="h-10 px-3 rounded-md border border-black/10 hover:bg-black hover:text-white transition">Collapse
+            all</button>
+        </div>
       </div>
-      <div class="flight-info">
-        <div class="route-container">
-          <div class="airport-info from">
-            <div class="detail-label">FROM:</div>
-            <div class="airport-code">JFK</div>
-            <div class="city-name">NEW YORK</div>
-            <div class="datetime">
-              Jan 25, 2025<br>
-              05:50 PM
+
+      <!-- Tag chips -->
+      <div id="faq-chips" class="mt-3 flex flex-wrap gap-2"></div>
+
+      <!-- Results count -->
+      <div id="faq-count" class="text-sm text-zinc-600 mt-3"></div>
+
+      <!-- Accordion list -->
+      <ul id="faq-list" class="mt-4 divide-y divide-black/10"></ul>
+    </section>
+  </main>
+
+  <script>
+    // -----------------------------
+    // 1) FAQ DATA (edit freely)
+    // -----------------------------
+    const FAQ = [
+      { id: "quotes-flow", q: "How does the booking/quotation flow work?", a: "You submit your trip details; our team calls to refine the plan; we send a formal quotation with an invoice reference. If you’re in the UAE you can pay via our domestic gateway; otherwise you’ll receive a secure invoice link.", tags: ["Booking", "Quotes"] },
+      { id: "tripbuilder-what", q: "What is Trip Builder Lite?", a: "A guided, one-question-at-a-time flow inspired by Typeform. You answer a few curated prompts and get a clear summary plus a stylized boarding-pass preview before submitting.", tags: ["Trip Builder"] },
+      { id: "dest-matrix-location", q: "Why do you ask for my location in Destination Matrix?", a: "We use it to pre-select your nearest airport and show accurate flight arcs. If you deny access, you can still choose any origin manually.", tags: ["Destination Matrix", "Privacy"] },
+      { id: "invoice-pay", q: "How do I pay an invoice?", a: "Use the Have an Invoice section. Enter your reference to be redirected to the payment page. UAE payments go through our domestic gateway; others may pay via the secure invoice link we issue.", tags: ["Payments", "Invoices"] },
+      { id: "invoice-format", q: "What does an invoice reference look like?", a: "References are alphanumeric, 6–24 characters, often prefixed like INV-2025-xxxx or HTL-DEL-xxxx.", tags: ["Invoices"] },
+      { id: "refunds", q: "What is your refund policy?", a: "Refunds depend on airline, hotel, and visa partner rules. We’ll outline exact terms on your quotation before you pay. Government fees for visas are usually non-refundable.", tags: ["Refunds", "Policies"] },
+      { id: "changes", q: "Can I change dates or traveler names after submitting?", a: "Date changes are usually possible before ticketing; name changes depend on carrier rules. Tell us as soon as possible and we’ll re-quote if needed.", tags: ["Changes"] },
+      { id: "visas", q: "Do you help with visas?", a: "Yes. We’ll advise documents at quotation time. Processing times vary by country and season. We don’t guarantee approvals, because embassies don’t either.", tags: ["Visas"] },
+      { id: "corporate", q: "Do you handle corporate or group travel?", a: "Yes. We manage luxury groups, negotiated rates, and consolidated invoicing. Share your company details and volume; we’ll set up terms.", tags: ["Corporate"] },
+      { id: "hotels-only", q: "Can I book only a hotel if I already have tickets and visa?", a: "Absolutely. Choose Hotels-Only in Trip Builder. We’ll quote properties that match your budget and style.", tags: ["Hotels"] },
+      { id: "payments-uae", q: "Is online payment available outside the UAE?", a: "Our primary gateway is UAE-based. If you’re abroad, we’ll generate a secure invoice link or alternate method based on your region.", tags: ["Payments"] },
+      { id: "security", q: "How do you secure my data?", a: "We minimize what we collect, use modern encryption in transit, and restrict internal access. You can request deletion of your inquiry anytime.", tags: ["Privacy", "Security"] },
+      { id: "support", q: "How do I contact support?", a: "Reply to your quotation email or submit your phone number in the footer rail. We’ll call back during business hours.", tags: ["Support"] },
+      { id: "errors", q: "The site looks broken on my phone. Now what?", a: "Try refreshing and ensure low-power mode isn’t throttling animations. If it persists, send a screenshot and device model; we’ll fix it.", tags: ["Tech"] },
+    ];
+
+    // -----------------------------
+    // 2) Elements and state
+    // -----------------------------
+    const listEl = document.getElementById("faq-list");
+    const countEl = document.getElementById("faq-count");
+    const chipsEl = document.getElementById("faq-chips");
+    const searchEl = document.getElementById("faq-search");
+
+    const TAGS = Array.from(new Set(FAQ.flatMap(f => f.tags))).sort();
+    let activeTags = new Set();
+    let query = "";
+
+    // -----------------------------
+    // 3) Build tag chips
+    // -----------------------------
+    TAGS.forEach(tag => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = tag;
+      b.className = "h-9 px-3 rounded-full border border-black/10 hover:bg-black hover:text-white transition text-sm";
+      b.addEventListener("click", () => {
+        b.classList.toggle("bg-black");
+        b.classList.toggle("text-white");
+        if (activeTags.has(tag)) activeTags.delete(tag); else activeTags.add(tag);
+        render();
+      });
+      chipsEl.appendChild(b);
+    });
+
+    // Search behavior and keyboard shortcut
+    searchEl.addEventListener("input", () => { query = searchEl.value.trim().toLowerCase(); render(); });
+    document.addEventListener("keydown", e => {
+      if (e.key === "/" && document.activeElement !== searchEl) { e.preventDefault(); searchEl.focus(); }
+    });
+
+    document.getElementById("expand-all").addEventListener("click", () => {
+      listEl.querySelectorAll("li").forEach(li => { if (!li.classList.contains("acc-open")) li.querySelector("button")?.click(); });
+    });
+    document.getElementById("collapse-all").addEventListener("click", () => {
+      listEl.querySelectorAll("li.acc-open").forEach(li => li.querySelector("button")?.click());
+    });
+
+    // -----------------------------
+    // 4) Render
+    // -----------------------------
+    function render() {
+      listEl.innerHTML = "";
+      const results = FAQ.filter(item => {
+        const tagPass = activeTags.size ? item.tags.some(t => activeTags.has(t)) : true;
+        const text = (item.q + " " + item.a).toLowerCase();
+        const qPass = query ? text.includes(query) : true;
+        return tagPass && qPass;
+      });
+
+      countEl.textContent = `${results.length} result${results.length !== 1 ? "s" : ""}`;
+
+      results.forEach(item => {
+        const li = document.createElement("li");
+        li.id = item.id;
+        li.className = "item py-3 px-2 md:px-3 transition-colors";
+
+        // Snippet: first sentence, trimmed
+        const firstSentence = item.a.split(/(?<=\.)\s/)[0] || item.a;
+        const snippet = truncate(firstSentence, 140);
+
+        const hitQ = highlight(item.q, query);
+        const hitS = highlight(snippet, query);
+        const hitA = highlight(item.a, query);
+
+        li.innerHTML = `
+          <button class="w-full text-left flex items-start justify-between gap-3 group" aria-expanded="false" aria-controls="${item.id}-panel">
+            <div class="flex-1">
+              <div class="flex items-center gap-3">
+                <span class="eyebrow text-[11px] uppercase text-zinc-500">${item.tags[0] || "General"}</span>
+                <span class="hidden md:inline text-[11px] text-zinc-400">•</span>
+                <span class="hidden md:inline text-[11px] text-zinc-500">${item.tags.slice(1).join(" / ")}</span>
+              </div>
+              <h2 class="mt-1 text-lg md:text-xl font-semibold tracking-tight group-hover:underline ${query ? "hit" : ""}">${hitQ}</h2>
+              <p class="text-sm md:text-[15px] text-zinc-600 mt-1 line-clamp-2" data-snippet>${hitS}</p>
+
+              <div id="${item.id}-panel" class="grid acc-body mt-1">
+                <div class="acc-panel overflow-hidden">
+                  <div class="pt-3">
+                    <div class="max-w-prose leading-7 text-[15px] text-zinc-700 ${query ? "hit" : ""}">${hitA}</div>
+                    <div class="mt-3 flex flex-wrap items-center gap-2">
+                      ${item.tags.map(t => `<span class="inline-block px-2 py-0.5 border rounded-full text-zinc-600 border-black/10 text-xs">${t}</span>`).join("")}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="plane-icon">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2A1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"
-                fill="#a0a6d8" />
+            <svg class="chev w-5 h-5 mt-1 text-zinc-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M6 9l6 6 6-6" stroke-width="1.8"/>
             </svg>
-          </div>
-          <div class="arrow"></div>
-          <div class="airport-info to">
-            <div class="detail-label">TO:</div>
-            <div class="airport-code">CDG</div>
-            <div class="city-name">PARIS</div>
-            <div class="datetime">
-              Jan 26, 2025<br>
-              07:20 AM
-            </div>
-          </div>
-        </div>
-        <div class="passenger-details">
-          <div class="detail-group">
-            <div class="detail-label">Passenger</div>
-            <div class="detail-value">JANE DOE</div>
-          </div>
-          <div class="detail-group">
-            <div class="detail-label">Flight</div>
-            <div class="detail-value">FR 0123</div>
-          </div>
-          <div class="detail-group">
-            <div class="detail-label">Terminal</div>
-            <div class="detail-value">2B</div>
-          </div>
-          <div class="detail-group">
-            <div class="detail-label">Gate</div>
-            <div class="detail-value">A 14</div>
-          </div>
-          <div class="detail-group">
-            <div class="detail-label">Seat</div>
-            <div class="detail-value">12 F</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="tear-line"></div>
-    <div class="stub-section">
-      <div class="stub-header">Lorem Airlines</div>
-      <div class="stub-info">
-        <div class="stub-row">
-          <div class="stub-label">Passenger</div>
-          <div class="stub-label">Class</div>
-        </div>
-        <div class="stub-row">
-          <div class="stub-value large">JANE DOE</div>
-          <div class="stub-value large">FIRST</div>
-        </div>
-        <div style="margin-top: 20px;">
-          <div class="stub-row">
-            <div class="stub-label">Date</div>
-            <div class="stub-value">JAN 25</div>
-          </div>
-        </div>
-        <div>
-          <div class="stub-row">
-            <div class="stub-label">Boarding</div>
-            <div class="stub-value">05:20 PM</div>
-          </div>
-        </div>
-        <div>
-          <div class="stub-row">
-            <div class="stub-label">Depart</div>
-            <div class="stub-value">05:50 PM</div>
-          </div>
-        </div>
-      </div>
-      <div class="barcode">
-        <div class="barcode-bars">
-          <div class="bar thick" style="height: 100%"></div>
-          <div class="bar thin" style="height: 80%"></div>
-          <div class="bar thin" style="height: 100%"></div>
-          <div class="bar thick" style="height: 90%"></div>
-          <div class="bar thin" style="height: 100%"></div>
-          <div class="bar thin" style="height: 70%"></div>
-          <div class="bar thick" style="height: 100%"></div>
-          <div class="bar thick" style="height: 85%"></div>
-          <div class="bar thin" style="height: 100%"></div>
-          <div class="bar thin" style="height: 75%"></div>
-          <div class="bar thick" style="height: 100%"></div>
-          <div class="bar thin" style="height: 90%"></div>
-          <div class="bar thin" style="height: 100%"></div>
-          <div class="bar thick" style="height: 80%"></div>
-          <div class="bar thin" style="height: 100%"></div>
-          <div class="bar thick" style="height: 95%"></div>
-          <div class="bar thin" style="height: 100%"></div>
-          <div class="bar thin" style="height: 85%"></div>
-          <div class="bar thick" style="height: 100%"></div>
-          <div class="bar thin" style="height: 70%"></div>
-          <div class="bar thick" style="height: 100%"></div>
-          <div class="bar thin" style="height: 90%"></div>
-          <div class="bar thin" style="height: 100%"></div>
-          <div class="bar thick" style="height: 85%"></div>
-          <div class="bar thin" style="height: 100%"></div>
-          <div class="bar thick" style="height: 75%"></div>
-          <div class="bar thin" style="height: 100%"></div>
-          <div class="bar thin" style="height: 95%"></div>
-          <div class="bar thick" style="height: 100%"></div>
-          <div class="bar thin" style="height: 80%"></div>
-          <div class="bar thick" style="height: 100%"></div>
-          <div class="bar thin" style="height: 90%"></div>
-          <div class="bar thin" style="height: 100%"></div>
-          <div class="bar thick" style="height: 85%"></div>
-          <div class="bar thin" style="height: 100%"></div>
-        </div>
-      </div>
-    </div>
-  </div>
+          </button>
+        `;
+
+        const btn = li.querySelector("button");
+        const chevron = li.querySelector(".chev");
+        const snippetEl = li.querySelector("[data-snippet]");
+
+        btn.addEventListener("click", () => {
+          const open = li.classList.toggle("acc-open");
+          btn.setAttribute("aria-expanded", String(open));
+          chevron.style.transform = open ? "rotate(180deg)" : "rotate(0deg)";
+          // hide snippet when open, show when closed
+          snippetEl.style.display = open ? "none" : "";
+        });
+
+        listEl.appendChild(li);
+      });
+
+      // Open matching hash on initial render
+      if (location.hash) {
+        const target = document.querySelector(location.hash);
+        if (target && listEl.contains(target)) {
+          const btn = target.querySelector("button");
+          btn?.click();
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    }
+
+    // Helpers
+    function truncate(s, n) { return s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s; }
+    function highlight(text, q) {
+      if (!q) return esc(text);
+      const ix = text.toLowerCase().indexOf(q);
+      if (ix < 0) return esc(text);
+      const before = esc(text.slice(0, ix));
+      const mid = esc(text.slice(ix, ix + q.length));
+      const after = esc(text.slice(ix + q.length));
+      return `${before}<mark>${mid}</mark>${after}`;
+    }
+    function esc(s) { return s.replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])); }
+
+    // Respect hash navigation changes too
+    window.addEventListener("hashchange", () => render());
+
+    // Initial render
+    render();
+  </script>
 </body>
 
 </html>

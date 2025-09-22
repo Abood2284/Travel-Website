@@ -137,7 +137,7 @@ export default function BoardingPass(props: BoardingPassProps = {}) {
     <div className="w-full flex justify-center p-4 md:p-5">
       <div className="w-full max-w-[900px] mx-auto">
         <div className="relative bg-white rounded-[28px] overflow-hidden shadow-[0_14px_40px_rgba(0,0,0,0.18)] flex md:flex-row flex-col">
-          {/* MAIN SECTION */}
+          {/* MAIN1 SECTION */}
           <div className="flex-1 min-w-[65%] flex flex-col">
             {/* Header */}
             <div className="bg-gradient-to-r from-black to-[#222222] text-white px-6 md:px-10 h-[72px] md:h-[96px] flex items-center justify-center">

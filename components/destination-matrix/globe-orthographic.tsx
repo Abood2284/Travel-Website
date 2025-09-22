@@ -8,6 +8,7 @@ import { feature } from "topojson-client";
 import type { FeatureCollection, Geometry } from "geojson";
 import { motion, animate } from "motion/react";
 import { AirplaneQatar3D } from "@/components/icons/AirplaneQatar3D"; // ← adjust path if needed
+import { useSound } from "@/sfx/SoundProvider";
 
 // ---- Shared types ----
 export type Destination = {
@@ -283,6 +284,10 @@ export default function GlobeOrthographic({
   onUserPositionChange,
   scaleMultiplier = 1,
   maxHeightPx = 780,
+  // sound controls
+  planeSoundStartSec = 2.2,
+  planeSoundDurationSec = 3,
+  planeSoundVolume = 0.1,
 }: {
   destinations: Destination[];
   worldTopo: any; // topojson.Topology
@@ -300,9 +305,14 @@ export default function GlobeOrthographic({
   }) => void;
   scaleMultiplier?: number;
   maxHeightPx?: number;
+  planeSoundStartSec?: number;
+  planeSoundDurationSec?: number;
+  planeSoundVolume?: number;
 }) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
+  const { playSample, stopSample, enabled: soundEnabled } = useSound();
+  const playingRef = useRef(false);
 
   // geo state
   const [rotation, setRotation] = useState<[number, number, number]>([
@@ -799,6 +809,10 @@ export default function GlobeOrthographic({
       // No route: clear plane and stop any running animation
       animRef.current?.stop?.();
       setPlane(null);
+      if (playingRef.current) {
+        stopSample("jet", { fadeMs: 150 });
+        playingRef.current = false;
+      }
       return;
     }
 
@@ -826,6 +840,16 @@ export default function GlobeOrthographic({
       updatePlaneAtProgress(0);
       const duration = Math.min(6, Math.max(0.6, total / planeSpeed));
       const coords = (routeLine?.coordinates || []) as [number, number][];
+      // sound: start when the plane starts moving; respect reduced motion and toggle
+      if (!prefersReducedMotion && soundEnabled) {
+        playSample("jet", {
+          start: planeSoundStartSec,
+          duration: planeSoundDurationSec,
+          volume: planeSoundVolume,
+          fadeMs: 150,
+        });
+        playingRef.current = true;
+      }
       animRef.current = animate(0, 1, {
         duration,
         ease: "linear",
@@ -833,7 +857,12 @@ export default function GlobeOrthographic({
           planeTRef.current = t;
           updatePlaneAtProgress(t);
         },
-        onComplete: () => {},
+        onComplete: () => {
+          if (playingRef.current) {
+            stopSample("jet", { fadeMs: 150 });
+            playingRef.current = false;
+          }
+        },
       });
     };
 
@@ -845,7 +874,17 @@ export default function GlobeOrthographic({
       setTimeout(startPlaneAnimation, 900);
     });
     return () => cancelAnimationFrame(id);
-  }, [selected, planeSpeed, prefersReducedMotion]);
+  }, [
+    selected,
+    planeSpeed,
+    prefersReducedMotion,
+    soundEnabled,
+    planeSoundStartSec,
+    planeSoundDurationSec,
+    planeSoundVolume,
+    stopSample,
+    playSample,
+  ]);
 
   return (
     <section

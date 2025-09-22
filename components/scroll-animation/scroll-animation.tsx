@@ -92,13 +92,14 @@ export function ScrollAnimation({
   return (
     <section
       ref={heroRef}
-      className={`relative h-svh overflow-clip bg-black ${className}`}
+      className={`relative w-full h-[100dvh] md:h-svh overflow-hidden bg-black ${className}`}
     >
       <div
         ref={containerRef}
         className="absolute inset-0 overflow-hidden bg-black"
         aria-hidden="true"
       />
+      <style>{`.pin-spacer{background-color:#000!important;}`}</style>
     </section>
   );
 }

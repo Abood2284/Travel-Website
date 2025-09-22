@@ -1,10 +1,10 @@
 // component/trip-builder/TripBuilderReceipt.tsx
 "use client";
-import { daysInclusive, fmt, rid, within30Days } from "@/lib/trip-builder/core";
+import { daysInclusive, rid, within30Days } from "@/lib/trip-builder/core";
 import { nextWeekend } from "@/lib/trip-builder/core";
 import {
   AIRLINES,
-  DESTINATIONS,
+  DESTINATIONS as DESTINATION_CHOICES,
   NATIONALITIES,
   ORIGIN_CITIES,
   HOTEL_PREFERENCES,
@@ -13,10 +13,21 @@ import {
   niceFact,
   whereIs,
 } from "@/lib/trip-builder/guardrails";
+import { DESTINATIONS as DESTINATION_META } from "@/lib/const";
 import { TripPayload, TripSeed } from "@/lib/trip-builder/types";
 import { useSound } from "@/sfx/SoundProvider";
-import React, { useEffect, useReducer, useRef, useState } from "react";
-import BoardingPass from "./BoardingPass";
+import React, {
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useMediaQuery } from "./useMedia";
+import { useEnterAdvance } from "./useEnterAdvance";
+import FlightLoader from "./FlightLoader";
 
 /**
  * TripBuilderReceipt
@@ -51,6 +62,8 @@ type StepId =
   | "dates"
   | "travellers"
   | "passengerName"
+  | "phoneNumber"
+  | "email"
   | "nationality"
   | "airline"
   | "hotel"
@@ -65,6 +78,8 @@ const STEP_FLOW: StepId[] = [
   "dates",
   "travellers",
   "passengerName",
+  "phoneNumber",
+  "email",
   "nationality",
   "airline",
   "hotel",
@@ -80,6 +95,8 @@ const STEP_TITLES: Record<StepId, string> = {
   dates: "Travel Dates",
   travellers: "Travellers",
   passengerName: "Lead Passenger",
+  phoneNumber: "Phone Number",
+  email: "Email",
   nationality: "Nationality",
   airline: "Airline Preference",
   hotel: "Hotel Preference",
@@ -87,6 +104,30 @@ const STEP_TITLES: Record<StepId, string> = {
   visa: "Visa Status",
   summary: "Trip Summary",
 };
+
+const DEBUG_PREFILL_ENABLED = process.env.NODE_ENV !== "production";
+
+const DESTINATION_LABEL_TO_ID = DESTINATION_META.reduce<Record<string, string>>(
+  (acc, dest) => {
+    const fullLabel = `${dest.name}, ${dest.country}`.toLowerCase();
+    acc[fullLabel] = dest.id;
+    acc[dest.name.toLowerCase()] = dest.id;
+    return acc;
+  },
+  {}
+);
+
+function destinationSlugFromLabel(label?: string) {
+  if (!label) return undefined;
+  const key = label.toLowerCase().trim();
+  if (DESTINATION_LABEL_TO_ID[key]) return DESTINATION_LABEL_TO_ID[key];
+  const [city, country] = label.split(",").map((part) => part.trim());
+  if (city && country) {
+    const recomposedKey = `${city.toLowerCase()}, ${country.toLowerCase()}`;
+    return DESTINATION_LABEL_TO_ID[recomposedKey];
+  }
+  return undefined;
+}
 
 type ChatItem = { id: string; role: "bot" | "user"; text: string };
 
@@ -107,13 +148,20 @@ type State = {
   flightClass?: string;
   visaStatus?: string;
   passengerName?: string;
+  phoneCountryCode?: string;
+  phoneNumber?: string;
+  email?: string;
   reducedMotion: boolean;
+  seededDestination?: string;
+  seedPromptShown: boolean;
 };
 
 const initialState: State = {
   step: "fromLocation",
   chat: [],
   reducedMotion: false,
+  seededDestination: undefined,
+  seedPromptShown: false,
 };
 
 type Action =
@@ -133,16 +181,8 @@ function reducer(state: State, action: Action): State {
       (Object.keys(seed) as (keyof TripSeed)[]).forEach((k) => {
         s[k] = seed[k] as any;
       });
-      if (seed.destination) {
-        s.step = "destinationSeed";
-        s.chat = [
-          {
-            id: "b0",
-            role: "bot",
-            text: `Got the route from the globe. Destination: ${seed.destination}.`,
-          },
-        ];
-      }
+      s.seededDestination = seed.destination ?? undefined;
+      s.seedPromptShown = false;
       return s;
     }
     case "PUSH_BOT":
@@ -238,25 +278,6 @@ function hash(s: string) {
   return Math.abs(h);
 }
 
-/**
- * NOTE: Boarding pass has limited space. Render passenger name as
- * "FirstName X." while preserving the full name in state/payload.
- * Only the visual BoardingPass uses this trimmed form.
- */
-function formatPassengerNameForPass(fullName?: string): string {
-  const name = (fullName || "").trim();
-  if (!name) return "GUEST";
-  const firstSpace = name.indexOf(" ");
-  if (firstSpace < 0) return name;
-  const first = name.slice(0, firstSpace);
-  // find first non-space character after the first space
-  let i = firstSpace + 1;
-  while (i < name.length && name[i] === " ") i++;
-  const initial = i < name.length ? name[i].toUpperCase() : "";
-  if (!initial) return first;
-  return `${first} ${initial}.`;
-}
-
 function backOne(dispatch: React.Dispatch<Action>, state: State) {
   const i = STEP_FLOW.indexOf(state.step);
   if (i <= 0) return; // nothing to go back to
@@ -281,6 +302,8 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
 }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { play } = useSound();
+  const isDesktop = useMediaQuery("(min-width: 768px)", true);
+  const router = useRouter();
   const prevLenRef = useRef(0);
   // tear-off ui
   const [isTearing, setIsTearing] = useState(false);
@@ -288,12 +311,155 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
   // fade between questions
   const [isFading, setIsFading] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
+  const [submissionState, setSubmissionState] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  const savingToastIdRef = useRef<string | number | null>(null);
   const TEAR_MS = 700; // keep in sync with CSS animation
-  // stable seed for boarding-pass meta
-  const passSeedRef = useRef(rid());
   // animation refs
   const receiptRef = useRef<HTMLDivElement>(null);
-  const passRef = useRef<HTMLDivElement>(null);
+
+  const hasAllRequiredFields = Boolean(
+    state.from &&
+      state.destination &&
+      state.nationality &&
+      state.startDate &&
+      state.endDate &&
+      state.passengerName?.trim() &&
+      state.email?.trim() &&
+      state.phoneCountryCode?.trim() &&
+      state.phoneNumber?.trim() &&
+      state.airlinePref &&
+      state.hotelPref &&
+      state.flightClass &&
+      state.visaStatus
+  );
+
+  // Actions
+  const handleSubmit = useCallback(async () => {
+    if (!hasAllRequiredFields) return;
+    if (submissionState === "saving") return;
+
+    const payload: TripPayload = {
+      from: state.from || originLabel || "",
+      destination: state.destination || "",
+      nationality: state.nationality || "",
+      startDate: state.startDate || "",
+      endDate: state.endDate || "",
+      days: state.days || 1,
+      nights: state.nights || Math.max(0, (state.days || 1) - 1),
+      adults: state.adults || 1,
+      kids: state.kids || 0,
+      airlinePref: state.airlinePref || "Any",
+      hotelPref: state.hotelPref || "3 Star",
+      flightClass: state.flightClass || "Economy",
+      visaStatus: state.visaStatus || "N/A",
+      passengerName: state.passengerName || passengerName || "GUEST",
+      phoneCountryCode: state.phoneCountryCode || "",
+      phoneNumber: state.phoneNumber || "",
+      email: state.email || "",
+      createdAt: new Date().toISOString(),
+    };
+
+    const requestBody = {
+      origin: payload.from,
+      destination: payload.destination,
+      nationality: payload.nationality,
+      startDate: payload.startDate,
+      endDate: payload.endDate,
+      adults: payload.adults,
+      kids: payload.kids,
+      airlinePreference: payload.airlinePref,
+      hotelPreference: payload.hotelPref,
+      flightClass: payload.flightClass,
+      visaStatus: payload.visaStatus,
+      passengerName: payload.passengerName,
+      email: payload.email,
+      phoneCountryCode: payload.phoneCountryCode,
+      phoneNumber: payload.phoneNumber,
+    };
+
+    try {
+      setSubmissionState("saving");
+      console.log("[TripBuilder] Submitting trip request", requestBody);
+      const savingToastId = toast.loading("Saving trip request…", {
+        duration: Infinity,
+      });
+      savingToastIdRef.current = savingToastId;
+      const response = await fetch("/api/trip-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log("[TripBuilder] Trip request response", {
+        status: response.status,
+        ok: response.ok,
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error("[TripBuilder] Trip request failure body", errorBody);
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      const responseJson = await response.json().catch(() => null);
+      console.log("[TripBuilder] Trip request success payload", responseJson);
+      const createdId =
+        typeof responseJson === "object" && responseJson !== null
+          ? (responseJson as { id?: string }).id ?? null
+          : null;
+      if (savingToastIdRef.current != null) {
+        toast.dismiss(savingToastIdRef.current);
+        savingToastIdRef.current = null;
+      }
+      toast.success("Request received! Our team will be in touch shortly.");
+      setSubmissionState("saved");
+      onSubmit?.(payload);
+      const redirectParams = new URLSearchParams();
+      if (createdId) redirectParams.set("tripRequestId", createdId);
+      const destinationSlug = destinationSlugFromLabel(payload.destination);
+      if (destinationSlug) redirectParams.set("destinationId", destinationSlug);
+      const queryString = redirectParams.toString();
+      router.push(`/order-confirmation${queryString ? `?${queryString}` : ""}`);
+    } catch (error) {
+      console.error("[TripBuilder] Trip request submission failed", error);
+      setSubmissionState("error");
+      if (savingToastIdRef.current != null) {
+        toast.dismiss(savingToastIdRef.current);
+        savingToastIdRef.current = null;
+      }
+      toast.error("We couldn’t save your request. Try again.", {
+        action: {
+          label: "Retry",
+          onClick: () => setSubmissionState("idle"),
+        },
+      });
+    }
+  }, [
+    hasAllRequiredFields,
+    submissionState,
+    state.from,
+    originLabel,
+    state.destination,
+    state.nationality,
+    state.startDate,
+    state.endDate,
+    state.days,
+    state.adults,
+    state.kids,
+    state.airlinePref,
+    state.hotelPref,
+    state.flightClass,
+    state.visaStatus,
+    state.passengerName,
+    passengerName,
+    state.phoneCountryCode,
+    state.phoneNumber,
+    state.email,
+    onSubmit,
+    router,
+  ]);
 
   // play on new chat line
   useEffect(() => {
@@ -309,27 +475,6 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
   useEffect(() => {
     if (state.step === "summary") {
       play("ding");
-      // Animate BoardingPass fade-in using GSAP if available, else CSS fallback
-      const el = passRef.current;
-      if (!el) return;
-      // initialize start state for graceful fallback
-      el.style.opacity = "0";
-      el.style.transform = "translateY(8px)";
-      (async () => {
-        try {
-          const gsapMod = await import("gsap");
-          const gsap = gsapMod.gsap || gsapMod.default || gsapMod;
-          gsap.to(el, { opacity: 1, y: 0, duration: 0.36, ease: "power2.out" });
-        } catch {
-          // fallback
-          el.style.transition =
-            "opacity 240ms ease-out, transform 240ms ease-out";
-          requestAnimationFrame(() => {
-            el.style.opacity = "1";
-            el.style.transform = "translateY(0)";
-          });
-        }
-      })();
     }
   }, [state.step, play]);
 
@@ -364,6 +509,36 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
     dispatch({ type: "SET_SEED", seed: seed || {} });
   }, [seed?.destination, seed?.startDate, seed?.endDate]);
 
+  useEffect(() => {
+    if (state.step !== "summary") {
+      if (submissionState !== "idle") {
+        setSubmissionState("idle");
+      }
+      return;
+    }
+    if (submissionState !== "idle") return;
+    if (!hasAllRequiredFields) return;
+    void handleSubmit();
+  }, [
+    state.step,
+    submissionState,
+    hasAllRequiredFields,
+    state.from,
+    state.destination,
+    state.nationality,
+    state.startDate,
+    state.endDate,
+    state.passengerName,
+    state.email,
+    state.phoneCountryCode,
+    state.phoneNumber,
+    state.airlinePref,
+    state.hotelPref,
+    state.flightClass,
+    state.visaStatus,
+    handleSubmit,
+  ]);
+
   // Persist draft
   useEffect(() => {
     if (!persistKey) return;
@@ -392,6 +567,9 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
       flightClass: state.flightClass,
       visaStatus: state.visaStatus,
       passengerName: state.passengerName,
+      phoneCountryCode: state.phoneCountryCode,
+      phoneNumber: state.phoneNumber,
+      email: state.email,
     };
     try {
       localStorage.setItem(persistKey, JSON.stringify(draft));
@@ -408,6 +586,33 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
   // UI helpers
   const pushBot = (text: string) => dispatch({ type: "PUSH_BOT", text });
   const pushUser = (text: string) => dispatch({ type: "PUSH_USER", text });
+
+  const prefillForDebug = useCallback(() => {
+    if (!DEBUG_PREFILL_ENABLED) return;
+    const { start, end } = within30Days();
+    dispatch({ type: "RESET" });
+    const updates: Array<{ key: keyof State; value: State[keyof State] }> = [
+      { key: "from", value: "Mumbai, India" },
+      { key: "destination", value: "Dubai, UAE" },
+      { key: "startDate", value: start },
+      { key: "endDate", value: end },
+      { key: "passengerName", value: "Debug Traveller" },
+      { key: "adults", value: 2 },
+      { key: "kids", value: 0 },
+      { key: "phoneCountryCode", value: "+91" },
+      { key: "phoneNumber", value: "9876543210" },
+      { key: "email", value: "debug@example.com" },
+      { key: "nationality", value: "Indian" },
+      { key: "airlinePref", value: "Any" },
+      { key: "hotelPref", value: "3 Star" },
+      { key: "flightClass", value: "Economy" },
+    ];
+    updates.forEach(({ key, value }) => {
+      dispatch({ type: "SET_FIELD", key, value });
+    });
+    dispatch({ type: "DERIVE_FROM_DATES" });
+    dispatch({ type: "GOTO", step: "visa" });
+  }, [dispatch]);
 
   // Smoothly transition between steps (Typeform-like)
   function goto(step: StepId) {
@@ -488,6 +693,10 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
       pushBot("How many people are planning to travel?");
     } else if (state.step === "passengerName") {
       pushBot("What's the passenger name?");
+    } else if (state.step === "phoneNumber") {
+      pushBot("What's the best phone number (with country code)?");
+    } else if (state.step === "email") {
+      pushBot("Where should we email your itinerary?");
     } else if (state.step === "nationality") {
       pushBot("What's your nationality?");
     } else if (state.step === "airline") {
@@ -501,28 +710,6 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.step]);
-
-  // Actions
-  const handleSubmit = () => {
-    const payload: TripPayload = {
-      from: state.from || "",
-      destination: state.destination || "",
-      nationality: state.nationality || "",
-      startDate: state.startDate || "",
-      endDate: state.endDate || "",
-      days: state.days || 1,
-      nights: state.nights || Math.max(0, (state.days || 1) - 1),
-      adults: state.adults || 1,
-      kids: state.kids || 0,
-      airlinePref: state.airlinePref || "Any",
-      hotelPref: state.hotelPref || "3 Star",
-      flightClass: state.flightClass || "Economy",
-      visaStatus: state.visaStatus || "N/A",
-      passengerName: state.passengerName || "GUEST",
-      createdAt: new Date().toISOString(),
-    };
-    onSubmit?.(payload);
-  };
 
   // Start tear animation, then reveal pass-only view
   function startTear() {
@@ -551,6 +738,13 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
     if (choice === "keep") {
       pushUser(`Keep ${state.destination}`);
       if (state.destination) pushBot(niceFact(state.destination));
+      if (state.seededDestination) {
+        dispatch({
+          type: "SET_FIELD",
+          key: "seededDestination",
+          value: undefined,
+        });
+      }
       goto("dates");
       return;
     }
@@ -561,12 +755,15 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
       return;
     }
     pushUser("Change destination");
+    dispatch({ type: "SET_FIELD", key: "seededDestination", value: undefined });
+    dispatch({ type: "SET_FIELD", key: "seedPromptShown", value: true });
     goto("destinationSelect");
   }
 
   function selectDestination(dest: string) {
     pushUser(dest);
     dispatch({ type: "SET_FIELD", key: "destination", value: dest });
+    dispatch({ type: "SET_FIELD", key: "seededDestination", value: undefined });
     pushBot(`Nice. ${dest} it is.`);
     pushBot(niceFact(dest));
     goto("dates");
@@ -617,13 +814,23 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
   function selectFromLocation(from: string) {
     pushUser(from);
     dispatch({ type: "SET_FIELD", key: "from", value: from });
-    goto("destinationSelect");
+    if (state.seededDestination) {
+      if (!state.seedPromptShown && state.destination) {
+        pushBot(
+          `Got the route from the globe. Destination: ${state.destination}.`
+        );
+        dispatch({ type: "SET_FIELD", key: "seedPromptShown", value: true });
+      }
+      goto("destinationSeed");
+    } else {
+      goto("destinationSelect");
+    }
   }
 
   function selectPassengerName(name: string) {
     pushUser(name);
     dispatch({ type: "SET_FIELD", key: "passengerName", value: name });
-    goto("nationality");
+    goto("phoneNumber");
   }
 
   function selectHotel(hotel: string) {
@@ -660,6 +867,13 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
     return STEP_FLOW.indexOf(state.step) > 0;
   })();
 
+  const phoneCountryCodeValue = (state.phoneCountryCode || "").trim();
+  const phoneNumberValue = (state.phoneNumber || "").replace(/\s+/g, "");
+  const isPhoneValid =
+    phoneCountryCodeValue.length >= 1 && phoneNumberValue.length >= 6;
+  const emailValue = (state.email || "").trim();
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
+
   const canGoNext = (() => {
     switch (state.step) {
       case "fromLocation":
@@ -677,7 +891,11 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
         return isValid;
       }
       case "passengerName":
-        return !!state.passengerName;
+        return !!state.passengerName?.trim();
+      case "phoneNumber":
+        return isPhoneValid;
+      case "email":
+        return isEmailValid;
       case "nationality":
         return !!state.nationality;
       case "airline":
@@ -694,6 +912,25 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
         return false;
     }
   })();
+
+  useEnterAdvance(
+    (event) => {
+      if (!isDesktop || !canGoNext) return null;
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName.toLowerCase();
+      if (
+        target &&
+        (tag === "input" ||
+          tag === "textarea" ||
+          target.isContentEditable ||
+          target.getAttribute("role") === "combobox")
+      ) {
+        return null;
+      }
+      return () => nextOne();
+    },
+    isDesktop && canGoNext
+  );
 
   const [showAll, setShowAll] = useState(false);
   const maxLines = Math.max(3, maxChatLines ?? 6);
@@ -752,74 +989,84 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
   /* ----------------------------- Render ----------------------------- */
   return (
     <div className={className}>
-      {/* When torn: show pass-only view and exit early */}
-      {isTorn && (
-        <div className="pass-only">
-          <BoardingPass
-            fromCity={state.from || originLabel || "Your City"}
-            toCity={state.destination || "—"}
-            iataFrom={iataFor(state.from || originLabel || "Your City")}
-            iataTo={iataFor(state.destination || "—")}
-            departDate={state.startDate}
-            arriveDate={state.endDate}
-            passengerName={formatPassengerNameForPass(
-              state.passengerName || passengerName || "GUEST"
-            )}
-            visaStatus={state.visaStatus || "N/A"}
-            adults={state.adults || 1}
-            children={state.kids || 0}
-            airline={state.airlinePref || "—"}
-            nationality={state.nationality || "—"}
-            hotelPref={state.hotelPref || "3 Star"}
-            flightClass={state.flightClass || "Economy"}
-          />
-          <div className="actions">
-            <button className="cta" onClick={resetAll}>
-              Restart
-            </button>
-            <button className="linkish" onClick={() => setIsTorn(false)}>
-              Back to chat
-            </button>
-          </div>
-        </div>
+      {submissionState === "saving" && (
+        <FlightLoader fullscreen message="Submitting your trip request…" />
       )}
       {!isTorn && (
         <>
           <div
             className="tb-head"
             role="group"
-            aria-label="Trip Builder header"
-          >
+          aria-label="Trip Builder header"
+        >
+          <div className="tb-title-row">
             <h2 className="tb-title font-black font-3xl">
               {title ?? "Smart Trip Builder"}
             </h2>
-            <p className="tb-sub">
-              {subtitle ??
-                "Conversational, receipt-style planner. Choose answers and we prep your trip + a boarding pass preview."}
+            {DEBUG_PREFILL_ENABLED && (
+              <button
+                type="button"
+                className="tb-debug-btn"
+                onClick={prefillForDebug}
+              >
+                Prefill 13 steps
+              </button>
+            )}
+          </div>
+          <p className="tb-sub">
+            {subtitle ??
+              "Conversational, receipt-style planner. Choose answers and we prep your trip + a boarding pass preview."}
             </p>
           </div>
 
           {state.step === "summary" ? (
-            <div ref={passRef}>
-              <StepIntro />
-              <BoardingPass
-                fromCity={state.from || originLabel || "Your City"}
-                toCity={state.destination || "—"}
-                iataFrom={iataFor(state.from || originLabel || "Your City")}
-                iataTo={iataFor(state.destination || "—")}
-                departDate={state.startDate}
-                arriveDate={state.endDate}
-                passengerName={formatPassengerNameForPass(
-                  state.passengerName || passengerName || "GUEST"
-                )}
-                visaStatus={state.visaStatus || "N/A"}
-                adults={state.adults || 1}
-                children={state.kids || 0}
-                airline={state.airlinePref || "—"}
-                nationality={state.nationality || "—"}
-                hotelPref={state.hotelPref || "3 Star"}
-                flightClass={state.flightClass || "Economy"}
-              />
+            <div className="flex justify-center">
+              <div className="w-full max-w-[620px] space-y-6">
+                <StepIntro />
+                <div
+                  className="rounded-3xl border border-slate-200/80 bg-white/90 p-10 text-center shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-lg"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {(submissionState === "idle" || submissionState === "saving") && (
+                    <>
+                      <FlightLoader className="mx-auto mt-2 h-40 w-40" />
+                      <h3 className="mt-6 text-xl font-semibold text-slate-900">
+                        Submitting your trip request
+                      </h3>
+                      <p className="mt-3 text-sm text-slate-600">
+                        Please wait while we confirm your request. This only takes a moment.
+                      </p>
+                    </>
+                  )}
+                  {submissionState === "saved" && (
+                    <>
+                      <h3 className="text-xl font-semibold text-slate-900">
+                        Redirecting to your confirmation
+                      </h3>
+                      <p className="mt-3 text-sm text-slate-600">
+                        Hang tight—your boarding pass and trip add-ons are loading.
+                      </p>
+                    </>
+                  )}
+                  {submissionState === "error" && (
+                    <>
+                      <h3 className="text-xl font-semibold text-slate-900">
+                        We couldn’t submit your request
+                      </h3>
+                      <p className="mt-3 text-sm text-slate-600">
+                        Please check your connection and try again. Your answers are still here.
+                      </p>
+                      <button
+                        className="mt-6 inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-2 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(15,23,42,0.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_42px_rgba(15,23,42,0.28)]"
+                        onClick={() => setSubmissionState("idle")}
+                      >
+                        Try again
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           ) : (
             <div
@@ -1006,7 +1253,7 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                           <option value="" disabled>
                             Select a destination
                           </option>
-                          {DESTINATIONS.map((d) => (
+                          {DESTINATION_CHOICES.map((d) => (
                             <option key={d} value={d}>
                               {d}
                             </option>
@@ -1015,7 +1262,7 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                       </label>
                     </div>
                     <div className="opts desktop-only">
-                      {DESTINATIONS.map((d) => (
+                      {DESTINATION_CHOICES.map((d) => (
                         <button
                           key={d}
                           className="opt"
@@ -1086,7 +1333,7 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                     </div>
                     {state.startDate && state.endDate && (
                       <div
-                        className="continue-wrap"
+                        className="continue-wrap mt-4 flex items-center gap-4"
                         role="group"
                         aria-label="Confirm dates"
                       >
@@ -1097,6 +1344,11 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                         >
                           OK
                         </button>
+                        {isDesktop && !isDateRangeInvalid && (
+                          <span className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500" aria-hidden>
+                            press <span className="ml-1 font-black text-slate-900">Enter</span> ↵
+                          </span>
+                        )}
                         {isDateRangeInvalid && (
                           <div className="error" role="alert">
                             Start date cannot be after end date
@@ -1182,14 +1434,21 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                           </button>
                         </div>
                       </label>
-                      <div className="field-actions">
-                        <button
-                          className="cta continue"
-                          onClick={() => goto("passengerName")}
-                          disabled={!isTravellersValid}
-                        >
-                          OK
-                        </button>
+                      <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
+                        <div className="flex items-center gap-4">
+                          <button
+                            className="cta continue"
+                            onClick={() => goto("passengerName")}
+                            disabled={!isTravellersValid}
+                          >
+                            OK
+                          </button>
+                          {isDesktop && isTravellersValid && (
+                            <span className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500" aria-hidden>
+                              press <span className="ml-1 font-black text-slate-900">Enter</span> ↵
+                            </span>
+                          )}
+                        </div>
                         {!isTravellersValid && (
                           <div className="error" role="alert">
                             {travellersError}
@@ -1207,13 +1466,12 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                     }${isEntering ? " fading-in" : ""}`}
                   >
                     <StepIntro />
-                    <div className="q">Great! what's your name, _ _ ?</div>
+                    <div className="q">Great! What's your full name?</div>
                     <div className="field-col mobile-stack">
-                      <label className="field-row">
-                        <span className="text-lg">Name</span>
+                      <label className="field-row single">
                         <input
                           type="text"
-                          placeholder="Type your answer"
+                          placeholder="Type your name"
                           className="field-input"
                           value={state.passengerName || ""}
                           onChange={(e) =>
@@ -1225,13 +1483,126 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                           }
                         />
                       </label>
-                      <div className="field-actions">
+                      <div className="mt-3 flex items-center gap-4">
                         <button
                           className="cta"
-                          onClick={() => goto("nationality")}
+                          onClick={() => goto("phoneNumber")}
+                          disabled={!state.passengerName?.trim()}
                         >
                           OK
                         </button>
+                        {isDesktop && (
+                          <span className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500" aria-hidden>
+                            press <span className="ml-1 font-black text-slate-900">Enter</span> ↵
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {state.step === "phoneNumber" && (
+                  <div
+                    className={`block print-reveal${
+                      isFading ? " fading-out" : ""
+                    }${isEntering ? " fading-in" : ""}`}
+                  >
+                    <StepIntro />
+                    <div className="q">
+                      What's the best number to reach you?
+                    </div>
+                    <div className="field-col mobile-stack">
+                      <div className="phone-grid">
+                        <label className="field-row single">
+                          <input
+                            type="tel"
+                            inputMode="tel"
+                            placeholder="+971"
+                            className="field-input phone-code"
+                            value={state.phoneCountryCode || ""}
+                            onChange={(e) =>
+                              dispatch({
+                                type: "SET_FIELD",
+                                key: "phoneCountryCode",
+                                value: e.target.value,
+                              })
+                            }
+                          />
+                        </label>
+                        <label className="field-row single">
+                          <input
+                            type="tel"
+                            inputMode="tel"
+                            placeholder="55 123 4567"
+                            className="field-input phone-main"
+                            value={state.phoneNumber || ""}
+                            onChange={(e) =>
+                              dispatch({
+                                type: "SET_FIELD",
+                                key: "phoneNumber",
+                                value: e.target.value,
+                              })
+                            }
+                          />
+                        </label>
+                      </div>
+                      <div className="mt-3 flex items-center gap-4">
+                        <button
+                          className="cta"
+                          onClick={() => goto("email")}
+                          disabled={!isPhoneValid}
+                        >
+                          OK
+                        </button>
+                        {isDesktop && (
+                          <span className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500" aria-hidden>
+                            press <span className="ml-1 font-black text-slate-900">Enter</span> ↵
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {state.step === "email" && (
+                  <div
+                    className={`block print-reveal${
+                      isFading ? " fading-out" : ""
+                    }${isEntering ? " fading-in" : ""}`}
+                  >
+                    <StepIntro />
+                    <div className="q">
+                      Where should we email your trip details?
+                    </div>
+                    <div className="field-col mobile-stack">
+                      <label className="field-row single">
+                        <input
+                          type="email"
+                          placeholder="you@example.com"
+                          className="field-input"
+                          value={state.email || ""}
+                          onChange={(e) =>
+                            dispatch({
+                              type: "SET_FIELD",
+                              key: "email",
+                              value: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                      <div className="mt-3 flex items-center gap-4">
+                        <button
+                          className="cta"
+                          onClick={() => goto("nationality")}
+                          disabled={!isEmailValid}
+                        >
+                          OK
+                        </button>
+                        {isDesktop && (
+                          <span className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500" aria-hidden>
+                            press <span className="ml-1 font-black text-slate-900">Enter</span> ↵
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1417,7 +1788,7 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
           border-radius: 14px;
           box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
           padding: 28px;
-          max-width: 1040px; /* widened again by ~20% */
+          max-width: 1180px; /* widened again */
           margin: 0 auto;
           position: relative;
           display: flex;
@@ -1588,8 +1959,7 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
         .block.print-reveal .opts,
         .block.print-reveal .field-col,
         .block.print-reveal .date-grid,
-        .block.print-reveal .inline,
-        .block.print-reveal .field-actions {
+        .block.print-reveal .inline {
           animation: printRow 0.34s ease-out both;
           animation-delay: 120ms;
         }
@@ -1609,7 +1979,7 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
         /* Center block container but keep text/components left-aligned */
         .block:not(.summary) {
           margin: 24px auto 32px;
-          max-width: 560px;
+          max-width: 720px;
           text-align: left;
         }
         .block:not(.summary) .q,
@@ -1622,9 +1992,10 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
         .block:not(.summary) .opts {
           padding-left: 0;
           display: grid;
-          grid-template-columns: 1fr;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
           row-gap: 14px; /* more gap between answers */
-          justify-items: start;
+          column-gap: 14px;
+          justify-items: stretch;
         }
         /* Force hotel options to stack one per row on desktop */
         .hotel-opts {
@@ -1914,6 +2285,13 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
             padding: 8px 12px;
             margin-top: 8px;
           }
+          .phone-grid {
+            grid-template-columns: 1fr;
+            gap: 8px;
+          }
+          .phone-code {
+            text-align: left;
+          }
         }
         .inline input[type="number"]:hover {
           background: #f9fafb;
@@ -1933,10 +2311,21 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
           align-items: center;
           gap: 10px;
         }
-        .field-actions {
-          display: flex;
-          justify-content: flex-start; /* align left */
-          margin-top: 12px; /* add space from previous inline row */
+        .field-row.single {
+          grid-template-columns: 1fr;
+        }
+        .phone-grid {
+          display: grid;
+          grid-template-columns: minmax(68px, 96px) 1fr;
+          gap: 10px;
+          align-items: start;
+        }
+        .phone-code {
+          text-align: center;
+          letter-spacing: 0.6px;
+        }
+        .phone-main {
+          text-align: left;
         }
         /* Remove number spinners */
         input[type="number"]::-webkit-outer-spin-button,
@@ -2134,26 +2523,23 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
         /* Responsive multi-column options for large lists */
         @media (min-width: 768px) {
           .block:not(.summary) .opts {
-            grid-template-columns: repeat(
-              2,
-              1fr
-            ); /* 2 equal columns on tablet */
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             column-gap: 16px;
             row-gap: 12px;
           }
           .hotel-opts {
-            grid-template-columns: 1fr; /* override to keep single column */
+            grid-template-columns: minmax(220px, 1fr); /* keep single column */
           }
         }
         @media (min-width: 1024px) {
           .block:not(.summary) .opts {
-            grid-template-columns: repeat(
-              3,
-              1fr
-            ); /* 3 equal columns on desktop */
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
           }
           .hotel-opts {
-            grid-template-columns: 1fr; /* single column on desktop too */
+            grid-template-columns: minmax(
+              240px,
+              1fr
+            ); /* single column on desktop too */
           }
         }
 
@@ -2206,6 +2592,12 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
           display: grid;
           align-content: center;
         }
+        .tb-title-row {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+        }
         .tb-title {
           color: #111827;
           line-height: 1.15;
@@ -2219,6 +2611,28 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
           color: #4b5563;
           font-size: 14px;
           margin: 0;
+        }
+        .tb-debug-btn {
+          border: none;
+          background: #111827;
+          color: #f8fafc;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          padding: 6px 14px;
+          border-radius: 9999px;
+          cursor: pointer;
+          transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+        .tb-debug-btn:hover {
+          transform: translateY(-1px);
+          background: #1f2937;
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+        }
+        .tb-debug-btn:focus-visible {
+          outline: 2px solid #111827;
+          outline-offset: 2px;
         }
         @media (min-width: 768px) {
           .tb-sub {
@@ -2381,8 +2795,7 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
           .block.print-reveal .opts,
           .block.print-reveal .field-col,
           .block.print-reveal .date-grid,
-          .block.print-reveal .inline,
-          .block.print-reveal .field-actions {
+          .block.print-reveal .inline {
             animation: none !important;
           }
         }
@@ -2429,8 +2842,23 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
             text-align: left;
           }
           .block:not(.summary) .opts {
-            flex-direction: column;
-            align-items: flex-start;
+            grid-template-columns: 1fr;
+            row-gap: 12px;
+            column-gap: 0;
+            justify-items: stretch;
+          }
+          .step-label {
+            font-size: 11px;
+            letter-spacing: 0.16px;
+          }
+          .step-label__count {
+            font-size: 11px;
+          }
+          .step-label__title {
+            font-size: 12px;
+          }
+          .phone-grid {
+            grid-template-columns: minmax(64px, 88px) 1fr;
           }
         }
         /* Mobile visibility helpers */

@@ -13,17 +13,50 @@ type Props = {
 const REF_REGEX = /^[A-Za-z0-9-]{6,24}$/;
 
 export default function HaveInvoiceSection({
-  initialRef = "INV-AX7Q9K",
+  initialRef = "",
   payPath = "/pay-invoice",
 }: Props) {
   const params = useSearchParams();
   const qsRef = params?.get("ref") ?? "";
   const [ref, setRef] = React.useState<string>(qsRef || initialRef);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [invoice, setInvoice] = React.useState<{
+    id: string;
+    receipt: string;
+    customer_name: string | null;
+    customer_email: string | null;
+    customer_phone: string | null;
+    amount_in_paise: number;
+    currency: string;
+    status: string;
+    provider: string;
+    provider_invoice_id: string | null;
+    provider_short_url: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+  } | null>(null);
+
+  function maskPhone(value: string | null) {
+    if (!value) return "—";
+    const digits = value.replace(/\D+/g, "");
+    if (digits.length <= 3) return digits;
+    const last3 = digits.slice(-3);
+    return `${"x".repeat(Math.max(0, digits.length - 3))}${last3}`;
+  }
 
   // Minimal “recognized” hints. Replace with real lookup later if needed.
   const recognized = React.useMemo(() => {
-    return { to: " - - -", amount: " - - -", date: " - - -" };
-  }, [ref]);
+    if (invoice) {
+      return {
+        to: invoice.customer_name || invoice.customer_email || "—",
+        amount: `${invoice.currency} ${invoice.amount_in_paise.toLocaleString(
+          "en-IN"
+        )}`,
+      };
+    }
+    return { to: " - - -", amount: " - - -" };
+  }, [invoice]);
 
   // Paste-to-fill from anywhere on the page
   React.useEffect(() => {
@@ -82,7 +115,29 @@ export default function HaveInvoiceSection({
       )?.reportValidity();
       return;
     }
-    safeRedirect(ref);
+    if (!invoice) void tear();
+    else safeRedirect(ref);
+  }
+
+  async function tear() {
+    setError(null);
+    setIsLoading(true);
+    setInvoice(null);
+    const receipt = ref.trim().toUpperCase();
+    try {
+      const res = await fetch(`/api/invoices/${encodeURIComponent(receipt)}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data?.error || "Invoice not found");
+        return;
+      }
+      const data = await res.json();
+      setInvoice(data);
+    } catch (err) {
+      setError("Network error. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -122,9 +177,9 @@ export default function HaveInvoiceSection({
                 </div>
               </div>
               <div>
-                <div className="text-xs uppercase text-zinc-500">Date</div>
+                <div className="text-xs uppercase text-zinc-500">Mobile</div>
                 <div className="text-lg text-zinc-600 md:text-zinc-700">
-                  {recognized.date}
+                  {maskPhone(invoice?.customer_phone ?? null)}
                 </div>
               </div>
               <div>
@@ -159,8 +214,7 @@ export default function HaveInvoiceSection({
             <div className="p-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="text-zinc-600 text-sm">
                 <h4 className="sr-only">Payment Instructions</h4>
-                Pay using reference{" "}
-                <span className="font-mono">{ref || "INV-AX7Q9K"}</span>
+                Pay using reference <span className="font-mono">{ref}</span>
               </div>
 
               <form
@@ -186,14 +240,17 @@ export default function HaveInvoiceSection({
                   onPointerDown={onPointerDown}
                   onPointerMove={onPointerMove}
                   onPointerUp={onPointerUp}
-                  className="h-11 px-5 rounded-md bg-black text-white font-medium active:scale-[.98] touch-none select-none w-full md:w-auto"
+                  disabled={isLoading}
+                  className="h-11 px-5 rounded-md bg-black text-white font-medium active:scale-[.98] touch-none select-none w-full md:w-auto disabled:opacity-60"
                   title="Drag a little to 'tear' or just click to pay"
                 >
-                  Tear &amp; Pay
+                  {isLoading ? "Loading…" : invoice ? "Pay" : "Tear"}
                 </button>
               </form>
             </div>
           </div>
+
+          {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
 
           <p className="mt-3 text-xs text-zinc-500">
             <strong>Tip:</strong> Paste an invoice reference anywhere on this

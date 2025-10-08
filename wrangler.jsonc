@@ -21,6 +21,12 @@
       // The service should match the "name" of your worker
       "service": "my-app"
     }
-  ]
+  ],
+  "observability": {
+    "logs": {
+      "enabled": true
+    }
+  }
+
  
 }

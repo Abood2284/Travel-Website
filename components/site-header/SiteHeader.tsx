@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Building2, Plane } from "lucide-react";
-import { StaggeredMenu } from "@/components/StaggeredMenu";
+import MobileMenu from "@/components/MobileMenu";
 
 const NAV_LINKS = [
   { href: "#destinations", label: "Destinations" },
@@ -58,23 +58,8 @@ const SiteHeader = () => {
           Menu
         </button>
 
-        {/* Mobile StaggeredMenu overlay */}
-        <div className="md:hidden">
-          <StaggeredMenu
-            position="right"
-            className="fixed inset-0 z-50 h-screen"
-            colors={["#1e1e22", "#35353c", "#4a4a52"]}
-            items={NAV_LINKS.map((l) => ({ label: l.label, ariaLabel: l.label, link: l.href }))}
-            displaySocials={false}
-            displayItemNumbering={false}
-            changeMenuColorOnOpen={false}
-            menuButtonColor="#e9e9ef"
-            openMenuButtonColor="#e9e9ef"
-            accentColor="#5227FF"
-            onMenuOpen={undefined}
-            onMenuClose={undefined}
-          />
-        </div>
+        {/* Mobile menu overlay */}
+        <MobileMenu />
       </nav>
     </header>
   );

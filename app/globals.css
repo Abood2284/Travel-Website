@@ -179,3 +179,23 @@ html::-webkit-scrollbar {
     opacity: 0.95;
   }
 }
+
+/* Prevent hidden menu overlay from blocking page interactions */
+.lw-mobilenav {
+  height: 100dvh;
+}
+.lw-mobilenav .staggered-menu-wrapper {
+  pointer-events: none;
+}
+.lw-mobilenav .staggered-menu-wrapper .sm-toggle {
+  pointer-events: auto;
+}
+.lw-mobilenav #staggered-menu-panel {
+  pointer-events: none;
+}
+.lw-mobilenav .staggered-menu-wrapper[data-open] {
+  pointer-events: auto;
+}
+.lw-mobilenav .staggered-menu-wrapper[data-open] #staggered-menu-panel {
+  pointer-events: auto;
+}

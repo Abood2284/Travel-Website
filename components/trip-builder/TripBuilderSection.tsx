@@ -23,7 +23,7 @@ export default function TripBuilderSection() {
   };
 
   return (
-    <section id="trip-builder">
+    <section id="trip-builder" style={{ backgroundColor: "#FCFCFA" }}>
       <GlobeOrthographicLoader
         destinations={DESTINATIONS}
         // Bubble events up
@@ -31,12 +31,12 @@ export default function TripBuilderSection() {
         onUserPositionChange={handleUserPos}
       />
 
-      <div style={{ padding: 20 }} className="my-12">
+      <div style={{ padding: 20 }} className="mt-8 mb-12 md:mt-14 lg:mt-16">
         <TripBuilderReceipt
           seed={seed}
           originLabel={originLabel}
           title="Trip Builder Lite"
-          subtitle="Pick quick answers. We’ll build your itinerary and a boarding pass preview."
+          subtitle="Pick quick answers. We'll build your itinerary and a boarding pass preview."
         />
       </div>
     </section>

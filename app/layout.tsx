@@ -1,3 +1,4 @@
+// app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
 import { firaSans, manrope } from "@/public/fonts/font";
@@ -18,9 +19,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${manrope.variable} ${firaSans.variable} overflow-x-hidden`}>
+      <body
+        className={`${manrope.variable} ${firaSans.variable} overflow-x-hidden`}
+      >
         <SoundProvider>
-          <SiteHeader />
+          {/* <SiteHeader /> */}
           {children}
           <SoundToggleFloating />
           <Toaster richColors closeButton />

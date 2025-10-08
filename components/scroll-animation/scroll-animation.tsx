@@ -1,3 +1,4 @@
+// components/scroll-animation/scroll-animation.tsx
 "use client";
 
 import { useEffect, useRef } from "react";
@@ -26,6 +27,8 @@ export function ScrollAnimation({
   const heroRef = useRef<HTMLElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<any>(null);
+
+  const triggerRef = useRef<ScrollTrigger | null>(null);
 
   useEffect(() => {
     if (!heroRef.current || !containerRef.current) return;

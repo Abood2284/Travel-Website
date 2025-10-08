@@ -149,10 +149,10 @@ export default function GlobeOrthographicLoader({
   }
 
   return (
-    <section className="py-8 mt-24">
+    <section className="py-8 pt-24">
       <div className="max-w-7xl mx-auto px-4 mb-16">
         <div className="text-center mb-0 md:mb-6">
-          <h2 className="text-7xl font-black mb-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
+          <h2 className="font-black mb-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent text-[48px] sm:text-[90px] leading-[1.15] tracking-[0.2px]">
             Choose Your Destination
           </h2>
           <p className="md:text-xl text-sm text-gray-600 max-w-2xl mx-auto leading-relaxed">
@@ -181,7 +181,7 @@ export default function GlobeOrthographicLoader({
       {/* Location Pills */}
       <div className="max-w-7xl mx-auto px-4 my-8">
         <div
-          className="flex flex-nowrap md:flex-wrap gap-2.5 justify-start md:justify-center overflow-x-auto md:overflow-visible -mx-4 px-4"
+          className="flex flex-nowrap md:flex-wrap gap-2.5 justify-start md:justify-center overflow-x-auto md:overflow-visible -mx-4 px-4 no-scrollbar"
           aria-label="Destination pills list"
         >
           {destinations.map((destination) => (

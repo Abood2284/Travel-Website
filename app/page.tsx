@@ -4,11 +4,12 @@ import { ScrollAnimation } from "@/components/scroll-animation/scroll-animation"
 import { TravelSearchSection } from "@/components/travel-search-section/travel-search-section";
 import { ContinentExplorer } from "@/components/continent-explorer/continent-explorer";
 
-import TripBuilderSection from "@/components/trip-builder/TripBuilderSection";
 import SiteFooter from "@/components/site-footer/SiteFooter";
 import HowItWorks from "@/components/how-it-works/HowItWorks";
 import HaveInvoiceSection from "@/components/invoice/HaveInvoiceSection";
 import SmartFAQSection, { FAQItem } from "@/components/faq/SmartFaqSection";
+import GlobeOrthographicLoader from "@/components/destination-matrix/GlobeOrthographicLoader";
+import { DESTINATIONS } from "@/lib/const";
 
 const FAQ_ITEMS: FAQItem[] = [
   {
@@ -40,8 +41,7 @@ export default function HomePage() {
         pxPerFrame={24}
         scrubAmount={1}
       />
-      <TripBuilderSection />
-      {/* Here’s the new section */}
+      <GlobeOrthographicLoader destinations={DESTINATIONS} />
       <HowItWorks />
       <Suspense fallback={null}>
         <HaveInvoiceSection />

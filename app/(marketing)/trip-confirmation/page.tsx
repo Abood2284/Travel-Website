@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CheckCircle, Home, Mail, Phone } from "lucide-react";
 import Link from "next/link";
 
-export default function TripConfirmationPage() {
+function TripConfirmationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tripId = searchParams.get("id");
@@ -131,5 +131,22 @@ export default function TripConfirmationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function TripConfirmationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
+            <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+          </div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <TripConfirmationContent />
+    </Suspense>
   );
 }

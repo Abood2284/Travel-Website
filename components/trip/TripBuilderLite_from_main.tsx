@@ -25,9 +25,9 @@ import React, {
 } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useMediaQuery } from "./useMedia";
-import { useEnterAdvance } from "./useEnterAdvance";
-import FlightLoader from "./FlightLoader";
+import { useMediaQuery } from "../trip-builder/useMedia";
+import { useEnterAdvance } from "../trip-builder/useEnterAdvance";
+import FlightLoader from "../trip-builder/FlightLoader";
 
 /**
  * TripBuilderReceipt
@@ -913,24 +913,21 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
     }
   })();
 
-  useEnterAdvance(
-    (event) => {
-      if (!isDesktop || !canGoNext) return null;
-      const target = event.target as HTMLElement | null;
-      const tag = target?.tagName.toLowerCase();
-      if (
-        target &&
-        (tag === "input" ||
-          tag === "textarea" ||
-          target.isContentEditable ||
-          target.getAttribute("role") === "combobox")
-      ) {
-        return null;
-      }
-      return () => nextOne();
-    },
-    isDesktop && canGoNext
-  );
+  useEnterAdvance((event) => {
+    if (!isDesktop || !canGoNext) return null;
+    const target = event.target as HTMLElement | null;
+    const tag = target?.tagName.toLowerCase();
+    if (
+      target &&
+      (tag === "input" ||
+        tag === "textarea" ||
+        target.isContentEditable ||
+        target.getAttribute("role") === "combobox")
+    ) {
+      return null;
+    }
+    return () => nextOne();
+  }, isDesktop && canGoNext);
 
   const [showAll, setShowAll] = useState(false);
   const maxLines = Math.max(3, maxChatLines ?? 6);
@@ -997,25 +994,25 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
           <div
             className="tb-head"
             role="group"
-          aria-label="Trip Builder header"
-        >
-          <div className="tb-title-row">
-            <h2 className="tb-title font-black font-3xl">
-              {title ?? "Smart Trip Builder"}
-            </h2>
-            {DEBUG_PREFILL_ENABLED && (
-              <button
-                type="button"
-                className="tb-debug-btn"
-                onClick={prefillForDebug}
-              >
-                Prefill 13 steps
-              </button>
-            )}
-          </div>
-          <p className="tb-sub">
-            {subtitle ??
-              "Conversational, receipt-style planner. Choose answers and we prep your trip + a boarding pass preview."}
+            aria-label="Trip Builder header"
+          >
+            <div className="tb-title-row">
+              <h2 className="tb-title font-black font-3xl">
+                {title ?? "Smart Trip Builder"}
+              </h2>
+              {DEBUG_PREFILL_ENABLED && (
+                <button
+                  type="button"
+                  className="tb-debug-btn"
+                  onClick={prefillForDebug}
+                >
+                  Prefill 13 steps
+                </button>
+              )}
+            </div>
+            <p className="tb-sub">
+              {subtitle ??
+                "Conversational, receipt-style planner. Choose answers and we prep your trip + a boarding pass preview."}
             </p>
           </div>
 
@@ -1028,14 +1025,16 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                   role="status"
                   aria-live="polite"
                 >
-                  {(submissionState === "idle" || submissionState === "saving") && (
+                  {(submissionState === "idle" ||
+                    submissionState === "saving") && (
                     <>
                       <FlightLoader className="mx-auto mt-2 h-40 w-40" />
                       <h3 className="mt-6 text-xl font-semibold text-slate-900">
                         Submitting your trip request
                       </h3>
                       <p className="mt-3 text-sm text-slate-600">
-                        Please wait while we confirm your request. This only takes a moment.
+                        Please wait while we confirm your request. This only
+                        takes a moment.
                       </p>
                     </>
                   )}
@@ -1045,7 +1044,8 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                         Redirecting to your confirmation
                       </h3>
                       <p className="mt-3 text-sm text-slate-600">
-                        Hang tightΓÇöyour boarding pass and trip add-ons are loading.
+                        Hang tightΓÇöyour boarding pass and trip add-ons are
+                        loading.
                       </p>
                     </>
                   )}
@@ -1055,7 +1055,8 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                         We couldnΓÇÖt submit your request
                       </h3>
                       <p className="mt-3 text-sm text-slate-600">
-                        Please check your connection and try again. Your answers are still here.
+                        Please check your connection and try again. Your answers
+                        are still here.
                       </p>
                       <button
                         className="mt-6 inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-2 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(15,23,42,0.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_42px_rgba(15,23,42,0.28)]"
@@ -1345,8 +1346,15 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                           OK
                         </button>
                         {isDesktop && !isDateRangeInvalid && (
-                          <span className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500" aria-hidden>
-                            press <span className="ml-1 font-black text-slate-900">Enter</span> Γå╡
+                          <span
+                            className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500"
+                            aria-hidden
+                          >
+                            press{" "}
+                            <span className="ml-1 font-black text-slate-900">
+                              Enter
+                            </span>{" "}
+                            Γå╡
                           </span>
                         )}
                         {isDateRangeInvalid && (
@@ -1444,8 +1452,15 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                             OK
                           </button>
                           {isDesktop && isTravellersValid && (
-                            <span className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500" aria-hidden>
-                              press <span className="ml-1 font-black text-slate-900">Enter</span> Γå╡
+                            <span
+                              className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500"
+                              aria-hidden
+                            >
+                              press{" "}
+                              <span className="ml-1 font-black text-slate-900">
+                                Enter
+                              </span>{" "}
+                              Γå╡
                             </span>
                           )}
                         </div>
@@ -1492,8 +1507,15 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                           OK
                         </button>
                         {isDesktop && (
-                          <span className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500" aria-hidden>
-                            press <span className="ml-1 font-black text-slate-900">Enter</span> Γå╡
+                          <span
+                            className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500"
+                            aria-hidden
+                          >
+                            press{" "}
+                            <span className="ml-1 font-black text-slate-900">
+                              Enter
+                            </span>{" "}
+                            Γå╡
                           </span>
                         )}
                       </div>
@@ -1555,8 +1577,15 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                           OK
                         </button>
                         {isDesktop && (
-                          <span className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500" aria-hidden>
-                            press <span className="ml-1 font-black text-slate-900">Enter</span> Γå╡
+                          <span
+                            className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500"
+                            aria-hidden
+                          >
+                            press{" "}
+                            <span className="ml-1 font-black text-slate-900">
+                              Enter
+                            </span>{" "}
+                            Γå╡
                           </span>
                         )}
                       </div>
@@ -1599,8 +1628,15 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
                           OK
                         </button>
                         {isDesktop && (
-                          <span className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500" aria-hidden>
-                            press <span className="ml-1 font-black text-slate-900">Enter</span> Γå╡
+                          <span
+                            className="hidden md:inline-flex items-center text-xs font-semibold text-slate-500"
+                            aria-hidden
+                          >
+                            press{" "}
+                            <span className="ml-1 font-black text-slate-900">
+                              Enter
+                            </span>{" "}
+                            Γå╡
                           </span>
                         )}
                       </div>
@@ -2623,7 +2659,8 @@ const TripBuilderReceipt: React.FC<TripBuilderReceiptProps> = ({
           padding: 6px 14px;
           border-radius: 9999px;
           cursor: pointer;
-          transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+          transition: transform 0.2s ease, box-shadow 0.2s ease,
+            background 0.2s ease;
         }
         .tb-debug-btn:hover {
           transform: translateY(-1px);

@@ -1,70 +1,80 @@
 "use client";
 
 import * as React from "react";
-import { toast } from "sonner";
+import { useCart } from "@/contexts/CartContext";
 
 type AddToPlanButtonProps = {
   activityId: string;
   tripRequestId: string | null;
+  activityName?: string;
+  activityImageUrl?: string;
+  destinationId?: string;
+  price?: number;
+  currency?: string;
   defaultAdded?: boolean;
   onAdded?: () => void;
 };
 
-export function AddToPlanButton({ activityId, tripRequestId, defaultAdded, onAdded }: AddToPlanButtonProps) {
-  const [isPending, startTransition] = React.useTransition();
-  const [hasAdded, setHasAdded] = React.useState(Boolean(defaultAdded));
+export function AddToPlanButton({ 
+  activityId, 
+  tripRequestId,
+  activityName = "Activity",
+  activityImageUrl,
+  destinationId = "unknown",
+  price,
+  currency,
+  defaultAdded, 
+  onAdded 
+}: AddToPlanButtonProps) {
+  const { addActivity, isActivityInCart } = useCart();
+  const [status, setStatus] = React.useState<"idle" | "adding" | "added">("idle");
+
+  const inCart = isActivityInCart(activityId);
 
   React.useEffect(() => {
-    setHasAdded(Boolean(defaultAdded));
+    if (defaultAdded) {
+      setStatus("added");
+    }
   }, [defaultAdded]);
 
-  const disabled = !tripRequestId || isPending || hasAdded;
-
   const handleClick = React.useCallback(() => {
-    if (!tripRequestId) {
-      toast.info("Save your trip first, then add activities.");
-      return;
-    }
-    if (hasAdded) return;
+    if (status === "adding" || inCart) return;
 
-    startTransition(async () => {
-      const promise = fetch(`/api/trip-requests/${tripRequestId}/activities`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ activityId }),
-      });
+    setStatus("adding");
 
-      toast.promise(promise, {
-        loading: "Adding to plan…",
-        success: "Activity added to your plan",
-        error: "Failed to add activity. Try again.",
-      });
-
-      try {
-        const response = await promise;
-        if (!response.ok) {
-          throw new Error("Failed request");
-        }
-        setHasAdded(true);
-        onAdded?.();
-      } catch (error) {
-        console.error("Add to plan failed", error);
-      }
+    // Add to cart
+    addActivity({
+      id: activityId,
+      name: activityName,
+      imageUrl: activityImageUrl,
+      destinationId,
+      price,
+      currency,
+      tripRequestId,
     });
-  }, [activityId, tripRequestId, hasAdded, onAdded]);
+
+    setStatus("added");
+    setTimeout(() => setStatus("idle"), 2000);
+    onAdded?.();
+  }, [activityId, activityName, activityImageUrl, destinationId, price, currency, tripRequestId, status, inCart, addActivity, onAdded]);
+
+  const label =
+    status === "adding" ? "Adding…" :
+    status === "added" ? "Added!" :
+    inCart ? "In Cart" : "Add to Cart";
 
   return (
     <button
       type="button"
       onClick={handleClick}
-      disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/60 focus-visible:ring-offset-2 ${
-        disabled
-          ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-          : "bg-slate-900 text-white hover:bg-slate-800"
+      disabled={status === "adding" || inCart}
+      className={`inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/60 focus-visible:ring-offset-2 ${
+        inCart
+          ? "bg-gray-100 text-gray-900 border border-gray-300 cursor-default"
+          : "bg-gray-900 text-white hover:bg-gray-800 shadow-md"
       }`}
     >
-      {hasAdded ? "Activity added" : isPending ? "Adding…" : "Add to plan"}
+      {label}
     </button>
   );
 }

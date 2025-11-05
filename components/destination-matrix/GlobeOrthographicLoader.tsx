@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import GlobeOrthographic, {
   type Destination,
 } from "@/components/destination-matrix/globe-orthographic";
@@ -42,17 +43,23 @@ export default function GlobeOrthographicLoader({
   const [scaleMultiplier, setScaleMultiplier] = useState<number>(1);
   const [maxHeightPx, setMaxHeightPx] = useState<number>(780);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const router = useRouter();
 
   // Plain derived value; not a hook
   const selectedDestination = selectedId
     ? destinations.find((d) => d.id === selectedId) || null
     : null;
 
-  // Wrap selection change to also notify parent
+  // Wrap selection change to also notify parent and navigate to destination page
   const handleSelectionChange = (id: string | null) => {
     setSelectedId(id);
     const dest = id ? destinations.find((d) => d.id === id) || null : null;
     onPickDestination?.(dest);
+    
+    // Navigate to destination page if a destination is selected
+    if (dest) {
+      router.push(`/destinations/${dest.id}`);
+    }
   };
 
   // Dynamic viewport sizing for mobile using VisualViewport and CSS var --vvh
@@ -188,9 +195,7 @@ export default function GlobeOrthographicLoader({
             <button
               key={destination.id}
               onClick={() => {
-                const newSelection =
-                  selectedId === destination.id ? null : destination.id;
-                handleSelectionChange(newSelection); // ← was setSelectedId(newSelection)
+                handleSelectionChange(destination.id);
               }}
               className={`
                 px-3 py-2 md:px-3.5 md:py-2.5 rounded-full text-sm md:text-base font-medium transition-all duration-200 whitespace-nowrap

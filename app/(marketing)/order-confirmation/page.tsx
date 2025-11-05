@@ -1,8 +1,4 @@
-import { and, eq } from "drizzle-orm";
-
 import { DESTINATIONS } from "@/lib/const";
-import { db } from "@/lib/db";
-import { activities, tripRequestActivities } from "@/lib/db/schema";
 import { getTripRequestById } from "@/lib/db/queries/trip-requests";
 
 import OrderConfirmationClient from "./OrderConfirmationClient";
@@ -117,24 +113,6 @@ function toIsoDate(value?: string | Date | null) {
   return value;
 }
 
-function formatPrice(raw: string | number | null, currency: string) {
-  const numericValue = typeof raw === "number" ? raw : Number(raw ?? 0);
-  if (!Number.isFinite(numericValue)) {
-    return `${raw ?? ""} ${currency}`.trim();
-  }
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 2,
-    }).format(numericValue);
-  } catch {
-    return `${numericValue.toLocaleString(undefined, {
-      maximumFractionDigits: 2,
-    })} ${currency}`;
-  }
-}
-
 async function buildTripSummary(tripRequestId: string | null) {
   if (!tripRequestId) return { summary: null, destinationId: null, tripRequest: null };
   const tripRequest = await getTripRequestById(tripRequestId);
@@ -195,22 +173,6 @@ export default async function OrderConfirmationPage({
     ? DESTINATIONS.find((destination) => destination.id === destinationId) ?? null
     : null;
 
-  const activeActivities = destinationMeta
-    ? await db
-        .select()
-        .from(activities)
-        .where(and(eq(activities.destinationId, destinationMeta.id), eq(activities.isActive, true)))
-        .orderBy(activities.name)
-    : [];
-
-  const addedActivities = tripRequestId
-    ? await db
-        .select({ activityId: tripRequestActivities.activityId })
-        .from(tripRequestActivities)
-        .where(eq(tripRequestActivities.tripRequestId, tripRequestId))
-    : [];
-  const addedActivitySet = new Set(addedActivities.map((entry) => entry.activityId));
-
   const boardingPassProps = summary ?? {
     fromCity: "Your City",
     toCity: destinationMeta ? `${destinationMeta.name}, ${destinationMeta.country}` : "Your Destination",
@@ -230,16 +192,6 @@ export default async function OrderConfirmationPage({
   const destinationLabel = tripRequest?.destination ?? destinationMeta?.name ?? "your destination";
   const referenceShort = tripRequest?.id ? tripRequest.id.split("-")[0].toUpperCase() : null;
 
-  const activitiesForClient = activeActivities.map((activity) => ({
-    id: activity.id,
-    name: activity.name,
-    description: activity.description,
-    priceLabel: formatPrice(activity.price, activity.currency),
-    reviewCount: activity.reviewCount,
-    imageUrl: activity.imageUrl,
-    added: addedActivitySet.has(activity.id),
-  }));
-
   return (
     <OrderConfirmationClient
       firstName={firstName}
@@ -250,13 +202,6 @@ export default async function OrderConfirmationPage({
         iataFrom: iataFor(boardingPassProps.fromCity),
         iataTo: iataFor(boardingPassProps.toCity),
       }}
-      destination={
-        destinationMeta
-          ? { id: destinationMeta.id, name: destinationMeta.name, country: destinationMeta.country }
-          : null
-      }
-      activities={activitiesForClient}
-      tripRequestId={tripRequestId}
     />
   );
 }

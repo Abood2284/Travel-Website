@@ -8,6 +8,30 @@ export const DESTINATIONS = [
     coords: { lat: 25.2048, lon: 55.2708 },
   },
   {
+    id: "thailand",
+    name: "Thailand",
+    country: "Thailand",
+    coords: { lat: 15.87, lon: 100.9925 },
+  },
+  {
+    id: "london",
+    name: "London",
+    country: "UK",
+    coords: { lat: 51.5074, lon: -0.1278 },
+  },
+  {
+    id: "united-states",
+    name: "United States",
+    country: "USA",
+    coords: { lat: 39.8283, lon: -98.5795 },
+  },
+  {
+    id: "bali",
+    name: "Bali",
+    country: "Indonesia",
+    coords: { lat: -8.4095, lon: 115.1889 },
+  },
+  {
     id: "singapore",
     name: "Singapore",
     country: "Singapore",
@@ -18,12 +42,6 @@ export const DESTINATIONS = [
     name: "Maldives",
     country: "Maldives",
     coords: { lat: 3.2028, lon: 73.2207 },
-  },
-  {
-    id: "bali",
-    name: "Bali",
-    country: "Indonesia",
-    coords: { lat: -8.4095, lon: 115.1889 },
   },
   {
     id: "bangkok",
@@ -60,12 +78,6 @@ export const DESTINATIONS = [
     name: "Paris",
     country: "France",
     coords: { lat: 48.8566, lon: 2.3522 },
-  },
-  {
-    id: "london",
-    name: "London",
-    country: "UK",
-    coords: { lat: 51.5074, lon: -0.1278 },
   },
   {
     id: "amsterdam",

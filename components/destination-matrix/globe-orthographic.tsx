@@ -282,6 +282,7 @@ export default function GlobeOrthographic({
   planeSpeed = 100, // px per second (lower = slower)
   onPickDestination,
   onUserPositionChange,
+  onRouteAnimationComplete,
   scaleMultiplier = 1,
   maxHeightPx = 780,
   // sound controls
@@ -303,6 +304,7 @@ export default function GlobeOrthographic({
     lon: number;
     label?: string;
   }) => void;
+  onRouteAnimationComplete?: (dest: Destination) => void;
   scaleMultiplier?: number;
   maxHeightPx?: number;
   planeSoundStartSec?: number;
@@ -819,8 +821,6 @@ export default function GlobeOrthographic({
     // Starting a new route animation only when selection (route) actually changes
     animRef.current?.stop?.();
 
-    const isMobile =
-      typeof window !== "undefined" ? window.innerWidth < 640 : false;
     const dest = selected.coords;
 
     const startPlaneAnimation = () => {
@@ -862,6 +862,9 @@ export default function GlobeOrthographic({
             stopSample("jet", { fadeMs: 150 });
             playingRef.current = false;
           }
+          hasFlownRef.current = true;
+          // Notify parent that the route animation finished for current selection
+          if (selected) onRouteAnimationComplete?.(selected);
         },
       });
     };
@@ -884,6 +887,7 @@ export default function GlobeOrthographic({
     planeSoundVolume,
     stopSample,
     playSample,
+    onRouteAnimationComplete,
   ]);
 
   return (

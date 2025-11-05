@@ -50,16 +50,11 @@ export default function GlobeOrthographicLoader({
     ? destinations.find((d) => d.id === selectedId) || null
     : null;
 
-  // Wrap selection change to also notify parent and navigate to destination page
+  // Wrap selection change to also notify parent; navigation will occur after plane animation completes
   const handleSelectionChange = (id: string | null) => {
     setSelectedId(id);
     const dest = id ? destinations.find((d) => d.id === id) || null : null;
     onPickDestination?.(dest);
-    
-    // Navigate to destination page if a destination is selected
-    if (dest) {
-      router.push(`/destinations/${dest.id}`);
-    }
   };
 
   // Dynamic viewport sizing for mobile using VisualViewport and CSS var --vvh
@@ -183,6 +178,9 @@ export default function GlobeOrthographicLoader({
         planeSoundStartSec={planeSoundStartSec}
         planeSoundDurationSec={planeSoundDurationSec}
         planeSoundVolume={planeSoundVolume}
+        onRouteAnimationComplete={(dest) =>
+          router.push(`/destinations/${dest.id}`)
+        }
       />
 
       {/* Location Pills */}

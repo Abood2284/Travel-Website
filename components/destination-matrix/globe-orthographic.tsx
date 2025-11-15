@@ -365,6 +365,8 @@ export default function GlobeOrthographic({
 
   // Rotation animation state
   const rotationAnimRef = useRef<ReturnType<typeof animate> | null>(null);
+  // Guard to prevent re-entrant rotateTo calls creating nested animations
+  const isRotatingRef = useRef(false);
   const rotationRef = useRef<[number, number, number]>([0, -10, 0]);
   // Track if we've already completed one flight on mobile to avoid re-drawing effects
   const hasFlownRef = useRef(false);
@@ -394,16 +396,38 @@ export default function GlobeOrthographic({
       const start = rotationRef.current;
       const dλ = shortestDelta(start[0], target[0]);
       const dφ = shortestDelta(start[1], target[1]);
-      rotationAnimRef.current?.stop();
+      // If the target is effectively the same as the current rotation, skip animating
+      const smallEps = 1e-5;
+      if (Math.abs(dλ) < smallEps && Math.abs(dφ) < smallEps) {
+        return;
+      }
+      // stop any existing rotation animation and mark rotating
+      rotationAnimRef.current?.stop?.();
+      isRotatingRef.current = true;
       rotationAnimRef.current = animate(0, 1, {
         duration: Math.max(0.2, durationMs / 1000),
         ease: "easeInOut",
         onUpdate: (t) => {
           const λ = normalizeDeg(start[0] + dλ * t);
           const φ = normalizeDeg(start[1] + dφ * t);
-          setRotation([λ, φ, 0]);
+          // Only update React state when values meaningfully change to avoid
+          // retriggering effects that may re-create this animation.
+          setRotation((prev) => {
+            const eps = 1e-6;
+            if (
+              prev &&
+              Math.abs(prev[0] - λ) < eps &&
+              Math.abs(prev[1] - φ) < eps
+            ) {
+              return prev;
+            }
+            return [λ, φ, 0];
+          });
         },
-        onComplete: () => {},
+        onComplete: () => {
+          isRotatingRef.current = false;
+          rotationAnimRef.current = null;
+        },
       });
     },
     []
@@ -763,7 +787,7 @@ export default function GlobeOrthographic({
     if (!isMobile) return;
     if (selected) return;
     rotateTo(userPos.lat, userPos.lon, 600);
-  }, [userPos.lat, userPos.lon, selected, rotateTo]);
+  }, [userPos.lat, userPos.lon, selected?.id, rotateTo]);
 
   const handleSelectionChange = (id: string | null) => {
     // Toggle selection: if clicking the same destination, deselect it
@@ -872,13 +896,14 @@ export default function GlobeOrthographic({
     // Mobile now follows desktop behavior (no deep zoom / no camera-follow)
 
     // Desktop/default: rotate to destination, then fly (no camera follow)
+    // Only trigger rotateTo when the selected id actually changed (stable primitive)
     rotateTo(dest.lat, dest.lon);
     const id = requestAnimationFrame(() => {
       setTimeout(startPlaneAnimation, 900);
     });
     return () => cancelAnimationFrame(id);
   }, [
-    selected,
+    selected?.id,
     planeSpeed,
     prefersReducedMotion,
     soundEnabled,

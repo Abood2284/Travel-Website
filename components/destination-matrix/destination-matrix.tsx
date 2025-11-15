@@ -94,64 +94,28 @@ function greatCircleArc(
 // --- Default destinations (you can override via props) ---
 const DEFAULT_DESTINATIONS: Destination[] = [
   {
+    id: "bali",
+    name: "Bali",
+    country: "Indonesia",
+    coords: { lat: -8.3405, lon: 115.092 },
+  },
+  {
+    id: "united-states",
+    name: "United States",
+    country: "United States",
+    coords: { lat: 37.0902, lon: -95.7129 },
+  },
+  {
     id: "dubai",
     name: "Dubai",
     country: "UAE",
     coords: { lat: 25.2048, lon: 55.2708 },
   },
   {
-    id: "singapore",
-    name: "Singapore",
-    country: "Singapore",
-    coords: { lat: 1.3521, lon: 103.8198 },
-  },
-  {
-    id: "maldives",
-    name: "Maldives",
-    country: "Maldives",
-    coords: { lat: 3.2028, lon: 73.2207 },
-  },
-  {
-    id: "bali",
-    name: "Bali",
-    country: "Indonesia",
-    coords: { lat: -8.4095, lon: 115.1889 },
-  },
-  {
-    id: "bangkok",
-    name: "Bangkok",
+    id: "thailand",
+    name: "Thailand",
     country: "Thailand",
-    coords: { lat: 13.7563, lon: 100.5018 },
-  },
-  {
-    id: "phuket",
-    name: "Phuket",
-    country: "Thailand",
-    coords: { lat: 7.8804, lon: 98.3923 },
-  },
-  {
-    id: "istanbul",
-    name: "Istanbul",
-    country: "Turkey",
-    coords: { lat: 41.0082, lon: 28.9784 },
-  },
-  {
-    id: "doha",
-    name: "Doha",
-    country: "Qatar",
-    coords: { lat: 25.2854, lon: 51.531 },
-  },
-  {
-    id: "muscat",
-    name: "Muscat",
-    country: "Oman",
-    coords: { lat: 23.588, lon: 58.3829 },
-  },
-  {
-    id: "paris",
-    name: "Paris",
-    country: "France",
-    coords: { lat: 48.8566, lon: 2.3522 },
+    coords: { lat: 15.87, lon: 100.9925 },
   },
   {
     id: "london",
@@ -160,58 +124,94 @@ const DEFAULT_DESTINATIONS: Destination[] = [
     coords: { lat: 51.5074, lon: -0.1278 },
   },
   {
-    id: "amsterdam",
-    name: "Amsterdam",
-    country: "Netherlands",
-    coords: { lat: 52.3676, lon: 4.9041 },
+    id: "france",
+    name: "France",
+    country: "France",
+    coords: { lat: 46.2276, lon: 2.2137 },
   },
   {
-    id: "rome",
-    name: "Rome",
-    country: "Italy",
-    coords: { lat: 41.9028, lon: 12.4964 },
-  },
-  {
-    id: "zurich",
-    name: "Zurich",
-    country: "Switzerland",
-    coords: { lat: 47.3769, lon: 8.5417 },
-  },
-  {
-    id: "cairo",
-    name: "Cairo",
-    country: "Egypt",
-    coords: { lat: 30.0444, lon: 31.2357 },
-  },
-  {
-    id: "baku",
-    name: "Baku",
-    country: "Azerbaijan",
-    coords: { lat: 40.4093, lon: 49.8671 },
-  },
-  {
-    id: "mauritius",
-    name: "Mauritius",
-    country: "Mauritius",
-    coords: { lat: -20.3484, lon: 57.5522 },
-  },
-  {
-    id: "tokyo",
-    name: "Tokyo",
+    id: "japan",
+    name: "Japan",
     country: "Japan",
-    coords: { lat: 35.6762, lon: 139.6503 },
+    coords: { lat: 36.2048, lon: 138.2529 },
   },
   {
-    id: "sydney",
-    name: "Sydney",
+    id: "turkey",
+    name: "Türkiye",
+    country: "Turkey",
+    coords: { lat: 38.9637, lon: 35.2433 },
+  },
+  {
+    id: "china",
+    name: "China",
+    country: "China",
+    coords: { lat: 35.8617, lon: 104.1954 },
+  },
+  {
+    id: "greece",
+    name: "Greece",
+    country: "Greece",
+    coords: { lat: 39.0742, lon: 21.8243 },
+  },
+  {
+    id: "germany",
+    name: "Germany",
+    country: "Germany",
+    coords: { lat: 51.1657, lon: 10.4515 },
+  },
+  {
+    id: "netherlands",
+    name: "Netherlands",
+    country: "Netherlands",
+    coords: { lat: 52.1326, lon: 5.2913 },
+  },
+  {
+    id: "saudi-arabia",
+    name: "Saudi Arabia",
+    country: "Saudi Arabia",
+    coords: { lat: 23.8859, lon: 45.0792 },
+  },
+  {
+    id: "vietnam",
+    name: "Vietnam",
+    country: "Vietnam",
+    coords: { lat: 14.0583, lon: 108.2772 },
+  },
+  {
+    id: "switzerland",
+    name: "Switzerland",
+    country: "Switzerland",
+    coords: { lat: 46.8182, lon: 8.2275 },
+  },
+  {
+    id: "india",
+    name: "India",
+    country: "India",
+    coords: { lat: 20.5937, lon: 78.9629 },
+  },
+  {
+    id: "singapore",
+    name: "Singapore",
+    country: "Singapore",
+    coords: { lat: 1.3521, lon: 103.8198 },
+  },
+  {
+    id: "south-africa",
+    name: "South Africa",
+    country: "South Africa",
+    coords: { lat: -30.5595, lon: 22.9375 },
+  },
+  {
+    id: "australia",
+    name: "Australia",
     country: "Australia",
-    coords: { lat: -33.8688, lon: 151.2093 },
+    coords: { lat: -25.2744, lon: 133.7751 },
   },
   {
-    id: "newyork",
-    name: "New York",
-    country: "USA",
-    coords: { lat: 40.7128, lon: -74.006 },
+    id: "new-zealand",
+    name: "New Zealand",
+    country: "New Zealand",
+    coords: { lat: -40.9006, lon: 174.886 },
   },
 ];
 
@@ -350,6 +350,64 @@ export function DestinationMatrixSvg({
         <Dot color={COLORS.dest} glow={COLORS.destGlow} /> Destinations
       </div>
 
+      {/* View All Destinations Button */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 20,
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 2,
+        }}
+      >
+        <a
+          href="/destinations"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "12px 24px",
+            background: "rgba(59, 130, 246, 0.9)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 999,
+            color: "white",
+            fontSize: 14,
+            fontWeight: 600,
+            textDecoration: "none",
+            transition: "all 0.3s ease",
+            boxShadow: "0 4px 20px rgba(59, 130, 246, 0.3)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(59, 130, 246, 1)";
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 6px 25px rgba(59, 130, 246, 0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(59, 130, 246, 0.9)";
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 4px 20px rgba(59, 130, 246, 0.3)";
+          }}
+        >
+          <span>View All Destinations</span>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M6 12L10 8L6 4"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </a>
+      </div>
+
       {/* Background dotted map */}
       <Image
         src={dottedSvgDataUri}
@@ -440,7 +498,7 @@ export function DestinationMatrixSvg({
                 r={isSel ? 6 : 4.5}
               />
               {isSel && (
-                <Label x={p.x} y={p.y} text={`${d.name}, ${d.country}`} below />
+                <Label x={p.x} y={p.y} text={d.name} below />
               )}
             </g>
           );

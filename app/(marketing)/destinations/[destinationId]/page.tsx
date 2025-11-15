@@ -18,8 +18,10 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  return DESTINATIONS.map((destination) => ({
-    destinationId: destination.id,
+  // Generate params from the authoritative destination data so every
+  // destination in `DESTINATION_DATA` gets a static route.
+  return Object.keys(DESTINATION_DATA).map((destinationId) => ({
+    destinationId,
   }));
 }
 
@@ -47,12 +49,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function DestinationPage({ params }: PageProps) {
   const { destinationId } = await params;
 
-  // Validate destination exists
-  const destination = DESTINATIONS.find((d) => d.id === destinationId);
-  if (!destination) {
-    notFound();
-  }
-
+  // Validate destination exists in the authoritative data source
   const destinationInfo = DESTINATION_DATA[destinationId];
   if (!destinationInfo) {
     notFound();
@@ -65,6 +62,11 @@ export default async function DestinationPage({ params }: PageProps) {
       .select()
       .from(activities)
       .where(eq(activities.destinationId, destinationId));
+    
+    console.log(`[${destinationId}] Found ${destinationActivities.length} activities`);
+    if (destinationActivities.length > 0) {
+      console.log(`[${destinationId}] Activities:`, destinationActivities.map(a => ({ id: a.id, name: a.name, destinationId: a.destinationId })));
+    }
   } catch (error) {
     console.error("Failed to fetch activities:", error);
     // Continue without activities rather than failing the page

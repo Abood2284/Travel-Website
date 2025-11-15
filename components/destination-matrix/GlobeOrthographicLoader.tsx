@@ -205,7 +205,7 @@ export default function GlobeOrthographicLoader({
                 }
               `}
             >
-              {destination.name}, {destination.country}
+              {destination.name}
             </button>
           ))}
         </div>
@@ -216,7 +216,7 @@ export default function GlobeOrthographicLoader({
             <p className="text-sm text-gray-600">
               Selected:{" "}
               <span className="font-medium text-sky-600">
-                {selectedDestination.name}, {selectedDestination.country}
+                {selectedDestination.name}
               </span>
             </p>
             <p className="mt-1 text-xs text-gray-500">
@@ -224,6 +224,31 @@ export default function GlobeOrthographicLoader({
             </p>
           </div>
         )}
+
+        {/* View All Destinations Button */}
+        <div className="mt-8 text-center">
+          <a
+            href="/destinations"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+          >
+            <span>View All Destinations</span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M6 12L10 8L6 4"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </a>
+        </div>
       </div>
     </section>
   );

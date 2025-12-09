@@ -968,7 +968,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Jamaica",
     description:
       "Jamaica offers reggae culture, mountain scenery and Caribbean beaches. Experience the vibrant spirit of the island through its music, cuisine, and warm hospitality.",
-    heroImage: "/countries/bali.jpg",
+    heroImage: "/countries/jamiaca.jpg",
     highlights: [
       "Negril's Seven Mile Beach",
       "Dunn's River Falls climbing experience",
@@ -1185,7 +1185,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "China",
     description:
       "China is vast, with dynastic history, iconic landmarks and diverse regions.",
-    heroImage: "/countries/thailand.jpg",
+    heroImage: "/countries/china.jpg",
     highlights: [
       "Great Wall of China",
       "Terracotta Army in Xi'an",
@@ -1241,7 +1241,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Greece",
     description:
       "Greece combines ancient ruins, islands and Mediterranean cuisine.",
-    heroImage: "/countries/london.jpg",
+    heroImage: "/countries/greece.jpg",
     highlights: [
       "Acropolis and Parthenon",
       "Santorini sunsets and white villages",
@@ -1297,7 +1297,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Germany",
     description:
       "Germany offers historic cities, alpine scenery and strong cultural traditions.",
-    heroImage: "/countries/switzerland.jpg",
+    heroImage: "/countries/germany.webp",
     highlights: [
       "Berlin Wall and Brandenburg Gate",
       "Bavarian Alps and Neuschwanstein",
@@ -1353,7 +1353,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Netherlands",
     description:
       "The Netherlands is known for canals, cycling, tulips and compact, walkable cities.",
-    heroImage: "/countries/bali.jpg",
+    heroImage: "/countries/netherlands.avif",
     highlights: [
       "Amsterdam canal cruises",
       "Keukenhof tulip gardens",
@@ -1409,7 +1409,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Saudi Arabia",
     description:
       "Saudi Arabia offers historic sites, Red Sea coastlines and desert landscapes.",
-    heroImage: "/countries/dubai.jpg",
+    heroImage: "/countries/saudi.jpg",
     highlights: [
       "AlUla ancient rock formations",
       "Red Sea diving and beaches",
@@ -1465,7 +1465,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Vietnam",
     description:
       "Vietnam stretches from rice terraces to vibrant cities and tropical coasts.",
-    heroImage: "/countries/thailand.jpg",
+    heroImage: "/countries/vietnam.webp",
     highlights: [
       "Ha Long Bay cruises",
       "Hanoi street food scene",
@@ -1577,7 +1577,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Singapore",
     description:
       "City-state with urban nature, world-class dining and family attractions.",
-    heroImage: "/countries/bali.jpg",
+    heroImage: "/countries/singapore.webp",
     highlights: [
       "Marina Bay Sands and skyline",
       "Gardens by the Bay Supertrees",
@@ -1633,7 +1633,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "South Africa",
     description:
       "South Africa is renowned for safaris, dramatic coastlines and vibrant cities.",
-    heroImage: "/countries/switzerland.jpg",
+    heroImage: "/countries/southafrica.jpg",
     highlights: [
       "Kruger National Park safaris",
       "Cape Town and Table Mountain",
@@ -1689,7 +1689,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Australia",
     description:
       "Australia features reefs, coasts, Outback and cosmopolitan cities.",
-    heroImage: "/countries/bali.jpg",
+    heroImage: "/countries/australia.webp",
     highlights: [
       "Great Barrier Reef diving",
       "Sydney Opera House and Harbour",
@@ -1745,7 +1745,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "New Zealand",
     description:
       "New Zealand is famed for fjords, mountains and compact, dramatic scenery.",
-    heroImage: "/countries/switzerland.jpg",
+    heroImage: "/countries/newzealand.webp",
     highlights: [
       "Milford Sound fjord cruises",
       "Queenstown adventure sports",
@@ -1805,7 +1805,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Canada",
     description:
       "Canada offers vast wilderness, national parks and diverse cities.",
-    heroImage: "/countries/switzerland.jpg",
+    heroImage: "/countries/canada.webp",
     highlights: [
       "Canadian Rockies and Banff",
       "Niagara Falls wonder",
@@ -1861,7 +1861,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Malaysia",
     description:
       "Malaysia combines cities, islands and rainforest biodiversity.",
-    heroImage: "/countries/bali.jpg",
+    heroImage: "/countries/malaysia.webp",
     highlights: [
       "Kuala Lumpur Petronas Towers",
       "Penang street food capital",
@@ -1917,7 +1917,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "South Korea",
     description:
       "South Korea offers high-energy cities, coastal islands and mountain trails.",
-    heroImage: "/countries/thailand.jpg",
+    heroImage: "/countries/southkorea.jpg",
     highlights: [
       "Seoul modern metropolis",
       "Jeju Island natural beauty",
@@ -1973,7 +1973,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Morocco",
     description:
       "Morocco is known for medinas, desert landscapes and Atlas mountain scenery.",
-    heroImage: "/countries/dubai.jpg",
+    heroImage: "/countries/morocco.avif",
     highlights: [
       "Marrakech souks and Jemaa el-Fnaa",
       "Sahara Desert camel treks",
@@ -2029,7 +2029,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Egypt",
     description:
       "Egypt is home to millennia-old monuments, Nile cruises and Red Sea diving.",
-    heroImage: "/countries/switzerland.jpg",
+    heroImage: "/countries/egypt.avif",
     highlights: [
       "Pyramids of Giza and Sphinx",
       "Luxor temples and Valley of the Kings",
@@ -2085,7 +2085,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Tunisia",
     description:
       "Tunisia mixes Mediterranean beaches, Roman ruins and Sahara oases.",
-    heroImage: "/countries/bali.jpg",
+    heroImage: "/countries/tunisia.webp",
     highlights: [
       "Carthage ancient ruins",
       "El Djem Roman amphitheater",
@@ -2141,7 +2141,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Qatar",
     description:
       "Qatar mixes modern architecture, museums and desert experiences.",
-    heroImage: "/countries/dubai.jpg",
+    heroImage: "/countries/qatar.jpg",
     highlights: [
       "Museum of Islamic Art",
       "Souq Waqif traditional market",
@@ -2197,7 +2197,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Jordan",
     description:
       "Jordan is famed for Petra, Wadi Rum and the Dead Sea's unique experiences.",
-    heroImage: "/countries/switzerland.jpg",
+    heroImage: "/countries/jordan.webp",
     highlights: [
       "Petra ancient city",
       "Wadi Rum desert landscapes",
@@ -2253,7 +2253,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Czechia",
     description:
       "Czechia (Prague) offers medieval architecture, castles and a rich cultural scene.",
-    heroImage: "/countries/london.jpg",
+    heroImage: "/countries/czechia.jpeg",
     highlights: [
       "Prague Castle and Charles Bridge",
       "Old Town Square and Astronomical Clock",
@@ -2309,7 +2309,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Poland",
     description:
       "Poland features historic cities, mountain ranges and Baltic coastlines.",
-    heroImage: "/countries/switzerland.jpg",
+    heroImage: "/countries/poland.avif",
     highlights: [
       "Kraków Old Town and Wawel Castle",
       "Warsaw rebuilt city center",
@@ -2421,7 +2421,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Croatia",
     description:
       "Croatia is famed for Adriatic coastlines, medieval towns and island hopping.",
-    heroImage: "/countries/bali.jpg",
+    heroImage: "/countries/coratia.jpg",
     highlights: [
       "Dubrovnik Old Town walls",
       "Plitvice Lakes National Park",
@@ -2477,7 +2477,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Belgium",
     description:
       "Belgium offers historic cities, chocolate, beer culture and UNESCO towns.",
-    heroImage: "/countries/london.jpg",
+    heroImage: "/countries/belgium.jpg",
     highlights: [
       "Brussels Grand Place and Manneken Pis",
       "Bruges medieval canals",
@@ -2533,7 +2533,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Ireland",
     description:
       "Ireland features green landscapes, dramatic coasts and lively cultural pubs.",
-    heroImage: "/countries/switzerland.jpg",
+    heroImage: "/countries/ireland.webp",
     highlights: [
       "Cliffs of Moher dramatic views",
       "Dublin pubs and Temple Bar",
@@ -2589,7 +2589,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Denmark",
     description:
       "Denmark mixes hygge culture, coastal islands and modern Copenhagen design.",
-    heroImage: "/countries/bali.jpg",
+    heroImage: "/countries/denmark.jpg",
     highlights: [
       "Copenhagen Nyhavn and Tivoli",
       "Little Mermaid statue",
@@ -2645,7 +2645,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Sweden",
     description:
       "Sweden has expansive forests, archipelagos and modern Scandinavian cities.",
-    heroImage: "/countries/switzerland.jpg",
+    heroImage: "/countries/sweden.webp",
     highlights: [
       "Stockholm archipelago beauty",
       "Gamla Stan old town",
@@ -2701,7 +2701,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Norway",
     description:
       "Norway is known for fjords, northern lights and dramatic coastal scenery.",
-    heroImage: "/countries/switzerland.jpg",
+    heroImage: "/countries/Norway.jpg",
     highlights: [
       "Fjord cruises and Geirangerfjord",
       "Northern lights viewing",
@@ -2758,7 +2758,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Romania",
     description:
       "Romania offers castles, Transylvanian landscapes and Black Sea coasts.",
-    heroImage: "/countries/london.jpg",
+    heroImage: "/countries/romania.jpg",
     highlights: [
       "Bran Castle (Dracula's Castle)",
       "Carpathian Mountains hiking",
@@ -2814,7 +2814,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Bulgaria",
     description:
       "Bulgaria features Black Sea beaches, ski resorts and historic towns.",
-    heroImage: "/countries/bali.jpg",
+    heroImage: "/countries/bulgaria.jpg",
     highlights: [
       "Sunny Beach Black Sea resort",
       "Bansko ski slopes",
@@ -2870,7 +2870,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Dominican Republic",
     description:
       "Caribbean beaches, all-inclusive resorts and vibrant culture define the Dominican Republic.",
-    heroImage: "/countries/bali.jpg",
+    heroImage: "/countries/dominican.jpg",
     highlights: [
       "Punta Cana pristine beaches",
       "Santo Domingo colonial zone",
@@ -2926,7 +2926,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Cuba",
     description:
       "Cuba is known for vintage cars, vibrant music, historic Havana and Caribbean beaches.",
-    heroImage: "/countries/thailand.jpg",
+    heroImage: "/countries/cuba.jpg",
     highlights: [
       "Havana colonial architecture",
       "Vintage car tours",
@@ -2982,7 +2982,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Brazil",
     description:
       "Brazil offers Amazon rainforest, iconic Rio festivals, and long Atlantic beaches.",
-    heroImage: "/countries/switzerland.jpg",
+    heroImage: "/countries/brazil.jpg",
     highlights: [
       "Rio de Janeiro and Carnival",
       "Amazon Rainforest adventures",
@@ -3038,7 +3038,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Argentina",
     description:
       "Argentina mixes Buenos Aires culture, Patagonian landscapes and wine regions.",
-    heroImage: "/countries/switzerland.jpg",
+    heroImage: "/countries/argentina.webp",
     highlights: [
       "Buenos Aires tango culture",
       "Patagonia glaciers and mountains",
@@ -3210,7 +3210,7 @@ export const DESTINATION_DATA: Record<string, DestinationInfo> = {
     country: "Mexico",
     description:
       "Mexico has rich heritage, beaches, and vibrant culinary and arts scenes.",
-    heroImage: "/countries/bali.jpg",
+    heroImage: "/countries/mexico.avif",
     highlights: [
       "Cancún Caribbean beaches",
       "Mexico City museums and culture",
